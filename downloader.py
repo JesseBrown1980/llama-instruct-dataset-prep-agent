@@ -97,7 +97,11 @@ def download_and_clean_resource(url, parent_context="", cache_dir="cache_refs"):
     # PDF
     if extension == ".pdf":
         raw_text = parse_pdf_to_text(local_path)
-        clean_text = cleaner_agent(raw_text, parent_context)
+        try:
+            clean_text = cleaner_agent(raw_text, parent_context)
+        except Exception as e:
+            logger.error(f"Failed to process URL {url}: {str(e)}")
+            clean_text = raw_text  # Use raw text if cleaning fails
         result = {"url": url, "text": clean_text, "time": meta_time, "downloaded": True}
         _save_json(result, cache_file)
         return result
@@ -113,7 +117,11 @@ def download_and_clean_resource(url, parent_context="", cache_dir="cache_refs"):
         with open(local_path, "rb") as f:
             html_bytes = f.read()
         raw_text = parse_html_to_text(html_bytes)
-        clean_text = cleaner_agent(raw_text, parent_context)
+        try:
+            clean_text = cleaner_agent(raw_text, parent_context)
+        except Exception as e:
+            logger.error(f"Failed to process URL {url}: {str(e)}")
+            clean_text = raw_text  # Use raw text if cleaning fails
         result = {"url": url, "text": clean_text, "time": meta_time, "downloaded": True}
         _save_json(result, cache_file)
         return result
@@ -121,7 +129,11 @@ def download_and_clean_resource(url, parent_context="", cache_dir="cache_refs"):
     # Fallback: treat as plain text
     with open(local_path, "r", encoding="utf-8", errors="ignore") as f:
         raw_text = f.read()
-    clean_text = cleaner_agent(raw_text, parent_context)
+    try:
+        clean_text = cleaner_agent(raw_text, parent_context)
+    except Exception as e:
+        logger.error(f"Failed to process URL {url}: {str(e)}")
+        clean_text = raw_text  # Use raw text if cleaning fails
     result = {"url": url, "text": clean_text, "time": meta_time, "downloaded": True}
     _save_json(result, cache_file)
     return result
