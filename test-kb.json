@@ -1,0 +1,112 @@
+{
+  "nodes": {
+    "R7Mpgb1WQXzd7cnaiMK0dig": {
+      "key": "R7Mpgb1WQXzd7cnaiMK0dig",
+      "uri": "https://soli.openlegalstandard.org/R7Mpgb1WQXzd7cnaiMK0dig",
+      "timestamp": "20250111140504",
+      "context": [],
+      "failed_urls": [],
+      "parents": [],
+      "children": [],
+      "has_parent_in_kb": false,
+      "languages": [
+        "en"
+      ],
+      "deprecated": false,
+      "country": null,
+      "source": null,
+      "labels": {
+        "en": "soli:code"
+      },
+      "definitions": {},
+      "type": "annotation"
+    },
+    "R7PEVL4EDe99UD7dVx58cFp": {
+      "key": "R7PEVL4EDe99UD7dVx58cFp",
+      "uri": "https://soli.openlegalstandard.org/R7PEVL4EDe99UD7dVx58cFp",
+      "timestamp": "20250111140504",
+      "context": [],
+      "failed_urls": [],
+      "parents": [],
+      "children": [],
+      "has_parent_in_kb": false,
+      "languages": [
+        "en"
+      ],
+      "deprecated": false,
+      "country": null,
+      "source": null,
+      "labels": {
+        "en": "soli:engaged"
+      },
+      "definitions": {},
+      "type": "annotation"
+    },
+    "R9e8PXI2IEusTTC9xKXN7hA": {
+      "key": "R9e8PXI2IEusTTC9xKXN7hA",
+      "uri": "https://soli.openlegalstandard.org/R9e8PXI2IEusTTC9xKXN7hA",
+      "timestamp": "20250111140504",
+      "context": [],
+      "failed_urls": [],
+      "parents": [],
+      "children": [],
+      "has_parent_in_kb": false,
+      "languages": [
+        "en"
+      ],
+      "deprecated": false,
+      "country": null,
+      "source": null,
+      "labels": {
+        "en": "soli:isAdverseTo"
+      },
+      "definitions": {},
+      "type": "annotation"
+    },
+    "RBwBJ2lKdRgVYPkQmoJN1pD": {
+      "key": "RBwBJ2lKdRgVYPkQmoJN1pD",
+      "uri": "https://soli.openlegalstandard.org/RBwBJ2lKdRgVYPkQmoJN1pD",
+      "timestamp": "20250111140504",
+      "context": [],
+      "failed_urls": [],
+      "parents": [],
+      "children": [],
+      "has_parent_in_kb": false,
+      "languages": [
+        "en"
+      ],
+      "deprecated": false,
+      "country": null,
+      "source": null,
+      "labels": {
+        "en": "utbmsma:phase"
+      },
+      "definitions": {},
+      "type": "annotation"
+    },
+    "RCAWR19VGcj184M2SBAaeoj": {
+      "key": "RCAWR19VGcj184M2SBAaeoj",
+      "uri": "https://soli.openlegalstandard.org/RCAWR19VGcj184M2SBAaeoj",
+      "timestamp": "20250111140504",
+      "context": [],
+      "failed_urls": [],
+      "parents": [],
+      "children": [],
+      "has_parent_in_kb": false,
+      "languages": [
+        "en"
+      ],
+      "deprecated": false,
+      "country": null,
+      "source": null,
+      "labels": {
+        "en": "utbmsma:task"
+      },
+      "definitions": {},
+      "type": "annotation"
+    }
+  },
+  "refs": [],
+  "failed_urls": [],
+  "downloadedRefs": []
+}
