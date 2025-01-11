@@ -93,3 +93,5 @@ A Python-based tool for converting OWL/RDF ontologies into instruction-following
 ```bash
 git clone https://github.com/yourusername/llama-instruct-dataset-prep-agent.git
 cd llama-instruct-dataset-prep-agent
+
+failed_downloads.txt
