@@ -1,0 +1,4 @@
+rdflib
+requests
+PyMuPDF
+beautifulsoup4
