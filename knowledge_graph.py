@@ -130,6 +130,7 @@ def process_node(g: Graph, node_uri: str, cache_dir: str = "cache_refs") -> Dict
 def build_knowledge_graph(owl_file: str, output_file: str = "test-kb.json", limit: Optional[int] = None) -> None:
     """
     Builds and saves a knowledge graph from OWL file with rich metadata and context.
+    If the output file exists, it will update the existing knowledge base.
     
     Args:
         owl_file: Path to OWL file
@@ -150,8 +151,17 @@ def build_knowledge_graph(owl_file: str, output_file: str = "test-kb.json", limi
     if not os.path.exists(cache_dir):
         os.makedirs(cache_dir)
 
-    # Initialize knowledge base
-    kb = {"nodes": {}}
+    # Load or create knowledge base
+    try:
+        with open(output_file, 'r') as f:
+            kb = json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        kb = {}
+    
+    # Ensure basic structure exists
+    kb.setdefault("nodes", {})
+    kb.setdefault("refs", [])
+    kb.setdefault("failed_urls", [])
     
     # Process classes and properties
     nodes = []
@@ -169,14 +179,38 @@ def build_knowledge_graph(owl_file: str, output_file: str = "test-kb.json", limi
         
         if node_data:
             node_data["type"] = node_type
-            kb["nodes"][node_data["key"]] = node_data
+            node_key = node_data["key"]
             
-            # Check if parents exist in KB
-            for parent_key in node_data["parents"]:
-                if parent_key in kb["nodes"]:
-                    node_data["has_parent_in_kb"] = True
-                    if node_data["key"] not in kb["nodes"][parent_key]["children"]:
-                        kb["nodes"][parent_key]["children"].append(node_data["key"])
+            # Check if node already exists and merge if needed
+            existing_node = kb["nodes"].get(node_key, {})
+            if existing_node:
+                # Preserve existing context and failed_urls
+                node_data["context"] = (
+                    existing_node.get("context", []) + 
+                    node_data.get("context", [])
+                )
+                node_data["failed_urls"] = list(set(
+                    existing_node.get("failed_urls", []) + 
+                    node_data.get("failed_urls", [])
+                ))
+            
+            kb["nodes"][node_key] = node_data
+            
+            # Update global failed_urls list
+            kb["failed_urls"].extend([
+                url for url in node_data.get("failed_urls", [])
+                if url not in kb["failed_urls"]
+            ])
+            
+            # Update global refs list
+            for ctx in node_data.get("context", []):
+                url = ctx.get("url")
+                if url and not any(r.get("url") == url for r in kb["refs"]):
+                    kb["refs"].append({
+                        "url": url,
+                        "local_path": ctx.get("local_path"),
+                        "time": ctx.get("time")
+                    })
             
             # Write KB after each node is processed
             with open(output_file, 'w') as f:
