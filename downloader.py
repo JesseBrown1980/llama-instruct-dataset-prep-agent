@@ -7,6 +7,7 @@ import logging
 import requests
 from urllib.parse import urlparse
 from agents import cleaner_agent
+from datetime import datetime
 
 try:
     import fitz  # PyMuPDF
@@ -42,6 +43,13 @@ def parse_html_to_text(html_bytes):
     except:
         return ""
 
+def write_failed_url(url: str, error: str):
+    """Write failed URL and error message to a file."""
+    failed_file = "failed_downloads.txt"
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    with open(failed_file, "a") as f:
+        f.write(f"{timestamp} | {url} | Error: {error}\n")
+
 def download_and_clean_resource(url, parent_context="", cache_dir="cache_refs"):
     """
     Downloads resource if not cached. If RDF/OWL/TTL, parse later as RDF.
@@ -72,8 +80,10 @@ def download_and_clean_resource(url, parent_context="", cache_dir="cache_refs"):
                 f.write(r.content)
             time.sleep(1)
         except Exception as e:
-            logger.error(f"Failed to download {url}: {str(e)}")
-            return {"url": url, "text": "", "downloaded": False, "time": ""}
+            error_msg = str(e)
+            logger.error(f"Failed to download {url}: {error_msg}")
+            write_failed_url(url, error_msg)
+            return {"url": url, "text": "", "downloaded": False, "time": datetime.now().isoformat()}
 
     extension = os.path.splitext(local_path)[1].lower()
     meta_time = time.ctime(os.path.getmtime(local_path))
