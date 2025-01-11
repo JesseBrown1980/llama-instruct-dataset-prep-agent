@@ -5,6 +5,7 @@ from knowledge_graph import build_knowledge_graph
 from downloader import download_and_clean_resource
 from agents import cleaner_agent
 import json
+import argparse
 
 # Configure logging
 logging.basicConfig(
@@ -18,12 +19,22 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 def main():
-    owl_input = "SOLI/SOLI.owl"  # Adjust path as needed
+    # Parse command line arguments
+    parser = argparse.ArgumentParser(description='Build knowledge base from OWL file')
+    parser.add_argument('--limit', type=int, help='Limit number of classes and properties (for testing)', default=None)
+    parser.add_argument('--owl-input', type=str, default="SOLI/SOLI.owl", help='Path to input OWL file')
+    parser.add_argument('--output', type=str, default="knowledge_base.json", help='Path to output JSON file')
+    args = parser.parse_args()
 
-    # Create knowledge base
-    knowledge_base = build_knowledge_graph(owl_input)
+    # Build knowledge graph
+    build_knowledge_graph(
+        owl_file=args.owl_input,
+        output_file=args.output,
+        limit=args.limit
+    )
     
     # Download and clean references
+    knowledge_base = json.load(open(args.output))
     clean_refs = []
     for ref in knowledge_base["refs"]:
         ref_url = str(ref)
@@ -40,10 +51,12 @@ def main():
     knowledge_base["downloadedRefs"] = clean_refs
     
     # Save knowledge base
-    with open("knowledge_base.json", "w") as f:
+    with open(args.output, "w") as f:
         json.dump(knowledge_base, f, indent=2)
     
-    logger.info("Knowledge base creation complete.")
+    logger.info(f"Knowledge base creation complete. Output saved to {args.output}")
+    if args.limit:
+        logger.info(f"Note: Output was limited to {args.limit} classes and properties for testing")
 
 if __name__ == "__main__":
     main()
