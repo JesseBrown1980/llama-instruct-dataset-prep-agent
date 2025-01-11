@@ -6,6 +6,7 @@ from rdflib import Graph, URIRef, Literal, OWL, RDF, RDFS
 import requests
 from datetime import datetime
 from downloader import download_and_clean_resource
+from class_counter import increment_count
 
 logger = logging.getLogger(__name__)
 
@@ -116,8 +117,26 @@ def process_node(g: Graph, node: URIRef, cache_dir: str, current_time: str) -> D
         "source": None,
         "labels": {"en": english_label} if english_label else {},
         "definitions": {},
-        "class_not_found": False
+        "class_not_found": False,
+        "downloadedRefs": []
     }
+    
+    # First try to download and process the about URL itself
+    try:
+        about_context, about_failed = process_urls_for_context([node_uri], cache_dir, current_time)
+        if about_context:
+            node_data["context"].extend(about_context)
+            for ctx in about_context:
+                if ctx["local_path"] not in node_data["downloadedRefs"]:
+                    node_data["downloadedRefs"].append(ctx["local_path"])
+        if about_failed:
+            for url in about_failed:
+                if url not in node_data["failed_urls"]:
+                    node_data["failed_urls"].append(url)
+    except Exception as e:
+        logger.error(f"Failed to process about URL {node_uri}: {str(e)}")
+        if node_uri not in node_data["failed_urls"]:
+            node_data["failed_urls"].append(node_uri)
     
     # Fetch SOLI metadata
     soli_data = fetch_soli_metadata(node_uri)
@@ -143,6 +162,15 @@ def process_node(g: Graph, node: URIRef, cache_dir: str, current_time: str) -> D
                 "description": soli_data.get("description")
             })
             
+            # Add definition to context if available
+            if soli_data.get("definition"):
+                node_data["context"].append({
+                    "url": node_uri,
+                    "text": soli_data["definition"],
+                    "type": "definition",
+                    "time": format_time(current_time)
+                })
+            
             # Add languages from translations
             if soli_data.get("translations"):
                 for lang in soli_data["translations"].keys():
@@ -150,20 +178,18 @@ def process_node(g: Graph, node: URIRef, cache_dir: str, current_time: str) -> D
                         node_data["languages"].append(lang)
             
             # Process parents from sub_class_of
-            for parent in soli_data.get("sub_class_of", []):
-                if is_soli_url(parent):
-                    parent_key = extract_soli_key(parent)
-                    if parent_key and parent_key not in node_data["parents"]:
-                        node_data["parents"].append(parent_key)
+            if soli_data.get("sub_class_of"):
+                for parent in soli_data["sub_class_of"]:
+                    if is_soli_url(parent) and parent not in node_data["parents"]:
+                        node_data["parents"].append(parent)
             
             # Process children
-            for child in soli_data.get("parent_class_of", []):
-                if is_soli_url(child):
-                    child_key = extract_soli_key(child)
-                    if child_key and child_key not in node_data["children"]:
-                        node_data["children"].append(child_key)
+            if soli_data.get("parent_class_of"):
+                for child in soli_data["parent_class_of"]:
+                    if is_soli_url(child) and child not in node_data["children"]:
+                        node_data["children"].append(child)
             
-            # Process URLs for context
+            # Process additional URLs for context
             urls_to_process = []
             if soli_data.get("is_defined_by"):
                 urls_to_process.append(soli_data["is_defined_by"])
@@ -171,8 +197,15 @@ def process_node(g: Graph, node: URIRef, cache_dir: str, current_time: str) -> D
             
             if urls_to_process:
                 context, failed = process_urls_for_context(urls_to_process, cache_dir, current_time)
-                node_data["context"].extend(context)
-                node_data["failed_urls"].extend(failed)
+                if context:
+                    node_data["context"].extend(context)
+                    for ctx in context:
+                        if ctx["local_path"] not in node_data["downloadedRefs"]:
+                            node_data["downloadedRefs"].append(ctx["local_path"])
+                if failed:
+                    for url in failed:
+                        if url not in node_data["failed_urls"]:
+                            node_data["failed_urls"].append(url)
     
     return node_data
 
@@ -186,7 +219,7 @@ def build_knowledge_graph(owl_file: str, output_file: str = "test-kb.json", limi
         output_file: Path to output JSON file
         limit: Optional int to limit number of nodes (for testing)
     """
-    current_time = "2025-01-11T14:05:04-08:00"  # Use provided time
+    current_time = "2025-01-11T14:42:19-08:00"  # Use provided time
     logger.info(f"Building knowledge graph from {owl_file}")
     
     g = Graph()
@@ -207,78 +240,165 @@ def build_knowledge_graph(owl_file: str, output_file: str = "test-kb.json", limi
         with open(output_file, 'r') as f:
             kb = json.load(f)
     except (FileNotFoundError, json.JSONDecodeError):
-        kb = {}
+        kb = {
+            "nodes": {},
+            "failed_urls": [],
+            "downloadedRefs": [],
+            "refs": []
+        }
     
-    # Ensure basic structure exists
-    kb.setdefault("nodes", {})
-    kb.setdefault("refs", [])
-    kb.setdefault("failed_urls", [])
-    
-    # Process AnnotationProperty nodes
+    # Find all subjects that have any predicate
     nodes = []
-    for node in g.subjects(RDF.type, OWL.AnnotationProperty):
-        # Check if node has a label
-        has_label = False
-        for _ in g.triples((node, RDFS.label, None)):
-            has_label = True
-            break
-        if has_label and is_soli_url(str(node)):
-            nodes.append((node, "annotation"))
+    seen = set()  # Just for deduping
+    for s, p, o in g:
+        node_uri = str(s)
+        if is_soli_url(node_uri) and node_uri not in seen:
+            nodes.append(s)
+            seen.add(node_uri)
+    
+    logger.info(f"Found {len(nodes)} unique SOLI URLs")
     
     if limit:
         nodes = nodes[:limit]
+        logger.info(f"Limited to {limit} nodes")
     
     # Process each node
-    for node, node_type in nodes:
-        logger.info(f"Processing {node_type}: {node}")
-        node_data = process_node(g, node, cache_dir, current_time)
+    for node in nodes:
+        node_uri = str(node)
+        node_key = extract_soli_key(node_uri)
         
-        if node_data:
-            node_data["type"] = node_type
-            node_key = node_data["key"]
+        if not node_key:
+            continue
             
-            # Check if node already exists and merge if needed
-            existing_node = kb["nodes"].get(node_key, {})
-            if existing_node:
-                # Preserve existing context and failed_urls
-                node_data["context"] = (
-                    existing_node.get("context", []) + 
-                    node_data.get("context", [])
-                )
-                node_data["failed_urls"] = list(set(
-                    existing_node.get("failed_urls", []) + 
-                    node_data.get("failed_urls", [])
-                ))
-            
-            # Check if parents exist in KB
-            for parent_key in node_data["parents"]:
-                if parent_key in kb["nodes"]:
-                    node_data["has_parent_in_kb"] = True
-                    # Add this node as child to parent if not already there
-                    parent_node = kb["nodes"][parent_key]
-                    if node_key not in parent_node.get("children", []):
-                        parent_node.setdefault("children", []).append(node_key)
-            
-            kb["nodes"][node_key] = node_data
-            
-            # Update global failed_urls list
-            kb["failed_urls"].extend([
-                url for url in node_data.get("failed_urls", [])
-                if url not in kb["failed_urls"]
-            ])
-            
-            # Update global refs list
-            for ctx in node_data.get("context", []):
-                url = ctx.get("url")
-                if url and not any(r.get("url") == url for r in kb["refs"]):
-                    kb["refs"].append({
-                        "url": url,
-                        "local_path": ctx.get("local_path"),
-                        "time": ctx.get("time")
+        # Skip if we've already processed this node
+        if node_key in kb["nodes"]:
+            continue
+        
+        # Get the type if available
+        node_type = "unknown"
+        for _, _, type_uri in g.triples((node, RDF.type, None)):
+            type_str = str(type_uri)
+            if '#' in type_str:
+                node_type = type_str.split('#')[-1].lower()
+                break
+        
+        # Get English label if available
+        english_label = None
+        for _, _, label in g.triples((node, RDFS.label, None)):
+            if isinstance(label, Literal) and (label.language is None or label.language == 'en'):
+                english_label = str(label)
+                break
+        
+        # Initialize node data
+        node_data = {
+            "key": node_key,
+            "uri": node_uri,
+            "timestamp": format_time(current_time),
+            "context": [],
+            "failed_urls": [],
+            "parents": [],
+            "children": [],
+            "content_urls": [],
+            "has_parent_in_kb": False,
+            "languages": ["en"] if english_label else [],
+            "deprecated": False,
+            "country": None,
+            "source": None,
+            "labels": {"en": english_label} if english_label else {},
+            "definitions": {},
+            "class_not_found": False,
+            "downloadedRefs": [],
+            "type": node_type
+        }
+        
+        # First try to download and process the about URL itself
+        try:
+            about_context, about_failed = process_urls_for_context([node_uri], cache_dir, current_time)
+            if about_context:
+                node_data["context"].extend(about_context)
+                for ctx in about_context:
+                    if ctx["local_path"] not in node_data["downloadedRefs"]:
+                        node_data["downloadedRefs"].append(ctx["local_path"])
+            if about_failed:
+                for url in about_failed:
+                    if url not in node_data["failed_urls"]:
+                        node_data["failed_urls"].append(url)
+        except Exception as e:
+            logger.error(f"Failed to process about URL {node_uri}: {str(e)}")
+            if node_uri not in node_data["failed_urls"]:
+                node_data["failed_urls"].append(node_uri)
+        
+        # Fetch SOLI metadata
+        soli_data = fetch_soli_metadata(node_uri)
+        if soli_data:
+            if "class_not_found" in soli_data:
+                node_data["class_not_found"] = True
+            else:
+                # Update basic metadata
+                node_data.update({
+                    "preferred_label": soli_data.get("preferred_label"),
+                    "alternative_labels": soli_data.get("alternative_labels", []),
+                    "definition": soli_data.get("definition"),
+                    "translations": soli_data.get("translations", {}),
+                    "deprecated": soli_data.get("deprecated", False),
+                    "country": soli_data.get("country"),
+                    "source": soli_data.get("source"),
+                })
+                
+                # Add definition to context if available
+                if soli_data.get("definition"):
+                    node_data["context"].append({
+                        "url": node_uri,
+                        "text": soli_data["definition"],
+                        "type": "definition",
+                        "time": format_time(current_time)
                     })
-            
-            # Write KB after each node is processed
-            with open(output_file, 'w') as f:
-                json.dump(kb, f, indent=2)
-            
+                
+                # Add languages from translations
+                if soli_data.get("translations"):
+                    for lang in soli_data["translations"].keys():
+                        if lang not in node_data["languages"]:
+                            node_data["languages"].append(lang)
+                
+                # Add parent URLs
+                if soli_data.get("sub_class_of"):
+                    for parent in soli_data["sub_class_of"]:
+                        if is_soli_url(parent) and parent not in node_data["parents"]:
+                            node_data["parents"].append(parent)
+                
+                # Add child URLs
+                if soli_data.get("parent_class_of"):
+                    for child in soli_data["parent_class_of"]:
+                        if is_soli_url(child) and child not in node_data["children"]:
+                            node_data["children"].append(child)
+                
+                # Add content URLs
+                if soli_data.get("is_defined_by"):
+                    url = soli_data["is_defined_by"]
+                    if url not in node_data["content_urls"]:
+                        node_data["content_urls"].append(url)
+                if soli_data.get("see_also"):
+                    for url in soli_data["see_also"]:
+                        if url not in node_data["content_urls"]:
+                            node_data["content_urls"].append(url)
+        
+        # Increment counter for new node
+        count = increment_count()
+        logger.info(f"Found new class {node_key} of type {node_type}. Total count: {count}")
+        
+        # Add to KB
+        kb["nodes"][node_key] = node_data
+        
+        # Update global lists
+        for url in node_data["failed_urls"]:
+            if url not in kb["failed_urls"]:
+                kb["failed_urls"].append(url)
+        for ref in node_data["downloadedRefs"]:
+            if ref not in kb["downloadedRefs"]:
+                kb["downloadedRefs"].append(ref)
+        
+        # Write KB after each node is processed
+        with open(output_file, 'w') as f:
+            json.dump(kb, f, indent=2)
+    
     logger.info(f"Knowledge base creation complete. Output saved to {output_file}")
