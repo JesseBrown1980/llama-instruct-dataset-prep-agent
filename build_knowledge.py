@@ -6,6 +6,7 @@ from downloader import download_and_clean_resource
 from agents import cleaner_agent
 import json
 import argparse
+import os
 
 # Configure logging
 logging.basicConfig(
@@ -18,6 +19,17 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+def ensure_file_exists(file_path: str, default_content: dict = None):
+    """Ensure file exists, create with default content if it doesn't."""
+    if not os.path.exists(file_path):
+        with open(file_path, 'w') as f:
+            content = default_content or {
+                "nodes": {},
+                "refs": [],
+                "failed_urls": []
+            }
+            json.dump(content, f, indent=2)
+
 def main():
     # Parse command line arguments
     parser = argparse.ArgumentParser(description='Build knowledge base from OWL file')
@@ -25,6 +37,9 @@ def main():
     parser.add_argument('--owl-input', type=str, default="SOLI/SOLI.owl", help='Path to input OWL file')
     parser.add_argument('--output', type=str, default="knowledge_base.json", help='Path to output JSON file')
     args = parser.parse_args()
+
+    # Ensure output file exists
+    ensure_file_exists(args.output)
 
     # Build knowledge graph
     build_knowledge_graph(
