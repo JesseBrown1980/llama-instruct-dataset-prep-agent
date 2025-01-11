@@ -31,16 +31,34 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
 
 ### 4. Usage 
-Ensure your Ollama instance is running with the llama3.1 model
-Run the main script with your OWL file:
+The dataset creation is split into two steps:
 
-The script will:
+1. Build the Knowledge Base:
+```bash
+python build_knowledge.py
+```
+This will:
+- Build a knowledge graph from the OWL file
+- Download and clean referenced documents using AI agents
+- Save the knowledge base to `knowledge_base.json`
 
-Build a knowledge graph from the OWL file
-Download and process referenced documents
-Generate questions and answers
-Save the results in Dolly/LLAMA instruction format
-Output Files
-knowledge_graph.json: Contains the processed ontology structure
-dolly_dataset.json: Final instruction dataset in LLAMA format
-owl_processing.log: Detailed processing log
+2. Create the Instruction Dataset:
+```bash
+python create_dataset.py
+```
+This will:
+- Read the knowledge base
+- Use AI agents to:
+  - Generate relevant questions
+  - Create detailed answers
+  - Format and validate the output
+- Save the results in LLAMA instruction format
+
+### Output Files
+
+- `knowledge_base.json`: Contains the processed ontology structure with cleaned references
+- `legal_instruction_dataset.json`: Final instruction dataset in LLAMA format
+- `owl_processing.log`: Knowledge base creation log
+- `dataset_creation.log`: Dataset creation log
+
+By default, the dataset creation process is limited to 5 items for testing. To process more items, modify the `limit` parameter in `create_dataset.py`.
