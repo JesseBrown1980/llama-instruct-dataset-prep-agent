@@ -1,129 +1,178 @@
-# knowledge_graph.py
-
 import logging
-from rdflib import Graph, RDF, RDFS, SKOS, OWL
-import re
-from typing import Dict, Set, List, Optional
-from downloader import download_and_clean_resource
 import json
 import os
-from datetime import datetime
+from typing import Optional, Dict, List, Any, Tuple
+from rdflib import Graph, URIRef, Literal, OWL, RDF, RDFS
 import requests
+from datetime import datetime
+from downloader import download_and_clean_resource
 
 logger = logging.getLogger(__name__)
 
-def extract_soli_key(uri: str) -> Optional[str]:
-    """Extract SOLI key from URI."""
-    match = re.search(r'R[A-Za-z0-9]{22}', uri)
-    return match.group(0) if match else None
+def format_time(time_str: str) -> str:
+    """Convert ISO time to format YYYYMMDDHHMMSS."""
+    # Parse the ISO time string
+    dt = datetime.strptime(time_str, "%Y-%m-%dT%H:%M:%S%z")
+    return dt.strftime("%Y%m%d%H%M%S")
 
-def fetch_soli_metadata(uri: str) -> Optional[Dict]:
-    """Fetch metadata from SOLI API for a given URI."""
+def fetch_soli_metadata(url: str) -> Dict[str, Any]:
+    """Fetch metadata from SOLI URL."""
     try:
-        response = requests.get(uri)
-        response.raise_for_status()
-        return response.json()
+        response = requests.get(url)
+        if response.status_code == 200:
+            data = response.json()
+            logger.info(f"Successfully fetched SOLI metadata from {url}")
+            return data
+        logger.warning(f"Failed to fetch SOLI metadata from {url}: {response.status_code}")
     except Exception as e:
-        logger.error(f"Failed to fetch SOLI metadata for {uri}: {str(e)}")
-        return None
+        logger.error(f"Error fetching SOLI metadata from {url}: {str(e)}")
+    return {"class_not_found": True}
 
-def process_node(g: Graph, node_uri: str, cache_dir: str = "cache_refs") -> Dict:
-    """Process a single node and gather all its metadata and relationships."""
-    key = extract_soli_key(str(node_uri))
-    if not key:
+def extract_soli_key(uri: str) -> str:
+    """Extract key from SOLI URI."""
+    if not uri:
         return None
-        
-    # Initialize node data
-    node_data = {
-        "key": key,
-        "uri": str(node_uri),
-        "timestamp": datetime.now().isoformat(),
-        "labels": {},
-        "definitions": {},
-        "alt_labels": {},
-        "parents": [],
-        "children": [],
-        "context": [],
-        "failed_urls": [],
-        "has_parent_in_kb": False,
-        "languages": set()
-    }
+    parts = uri.split('/')
+    if len(parts) > 0:
+        key = parts[-1]
+        if key.startswith('R') and len(key) == 23:  # SOLI keys are 23 chars long
+            return key
+    return None
+
+def is_soli_url(url: str) -> bool:
+    """Check if URL is a SOLI URL."""
+    return url and "soli.openlegalstandard.org" in url
+
+def is_owl_file(url: str) -> bool:
+    """Check if URL points to an OWL file."""
+    return url and (url.lower().endswith('.owl') or url.lower().endswith('.rdf'))
+
+def get_about_uri(g: Graph, node: URIRef) -> str:
+    """Get the node URI if it's a SOLI URL."""
+    node_uri = str(node)
+    if is_soli_url(node_uri):
+        return node_uri
+    return None
+
+def process_urls_for_context(urls: List[str], cache_dir: str, current_time: str) -> Tuple[List[Dict], List[str]]:
+    """Process URLs to download and clean content."""
+    context = []
+    failed_urls = []
     
-    # Get labels and definitions
-    for label in g.objects(node_uri, RDFS.label):
-        lang = label.language or 'en'
-        node_data["labels"][lang] = str(label)
-        node_data["languages"].add(lang)
-    
-    for definition in g.objects(node_uri, SKOS.definition):
-        lang = definition.language or 'en'
-        node_data["definitions"][lang] = str(definition)
-        node_data["languages"].add(lang)
-    
-    # Get alternative labels
-    for alt_label in g.objects(node_uri, SKOS.altLabel):
-        lang = alt_label.language or 'en'
-        if lang not in node_data["alt_labels"]:
-            node_data["alt_labels"][lang] = []
-        node_data["alt_labels"][lang].append(str(alt_label))
-        node_data["languages"].add(lang)
-    
-    # Fetch SOLI metadata
-    soli_metadata = fetch_soli_metadata(str(node_uri))
-    if soli_metadata:
-        node_data.update({
-            "preferred_label": soli_metadata.get("preferred_label"),
-            "definition": soli_metadata.get("definition"),
-            "alternative_labels": soli_metadata.get("alternative_labels", []),
-            "translations": soli_metadata.get("translations", {}),
-            "deprecated": soli_metadata.get("deprecated", False),
-            "country": soli_metadata.get("country"),
-            "source": soli_metadata.get("source")
-        })
-        
-        # Add parent classes from SOLI metadata
-        for parent_uri in soli_metadata.get("sub_class_of", []):
-            parent_key = extract_soli_key(parent_uri)
-            if parent_key:
-                node_data["parents"].append(parent_key)
-        
-        # Add child classes from SOLI metadata
-        for child_uri in soli_metadata.get("parent_class_of", []):
-            child_key = extract_soli_key(child_uri)
-            if child_key:
-                node_data["children"].append(child_key)
-    
-    # Process relationships in the graph
-    for parent in g.objects(node_uri, RDFS.subClassOf):
-        parent_key = extract_soli_key(str(parent))
-        if parent_key and parent_key not in node_data["parents"]:
-            node_data["parents"].append(parent_key)
-    
-    for parent in g.objects(node_uri, RDFS.subPropertyOf):
-        parent_key = extract_soli_key(str(parent))
-        if parent_key and parent_key not in node_data["parents"]:
-            node_data["parents"].append(parent_key)
-    
-    # Download and process context
-    for context_uri in g.objects(node_uri, RDFS.isDefinedBy):
+    for url in urls:
+        if not url:
+            continue
         try:
-            context_data = download_and_clean_resource(str(context_uri), cache_dir=cache_dir)
-            if context_data["downloaded"]:
-                relative_path = os.path.relpath(context_data.get("local_path", ""), os.getcwd())
-                node_data["context"].append({
-                    "url": str(context_uri),
+            result = download_and_clean_resource(url, cache_dir=cache_dir)
+            if result["downloaded"]:
+                relative_path = os.path.relpath(result["local_path"], os.getcwd())
+                context.append({
+                    "url": url,
                     "local_path": relative_path,
-                    "text": context_data["text"],
-                    "time": context_data["time"]
+                    "text": result["text"],
+                    "time": format_time(current_time)
                 })
             else:
-                node_data["failed_urls"].append(str(context_uri))
+                failed_urls.append(url)
         except Exception as e:
-            logger.error(f"Failed to process context {context_uri}: {str(e)}")
-            node_data["failed_urls"].append(str(context_uri))
+            logger.error(f"Failed to process URL {url}: {str(e)}")
+            failed_urls.append(url)
     
-    # Convert sets to lists for JSON serialization
-    node_data["languages"] = list(node_data["languages"])
+    return context, failed_urls
+
+def process_node(g: Graph, node: URIRef, cache_dir: str, current_time: str) -> Dict[str, Any]:
+    """Process a node in the graph and return its data."""
+    node_uri = str(node)
+    if not is_soli_url(node_uri):
+        logger.info(f"Skipping node {node_uri} - not a SOLI URL")
+        return None
+    
+    # Extract SOLI key
+    node_key = extract_soli_key(node_uri)
+    if not node_key:
+        logger.info(f"Skipping node {node_uri} - not a valid SOLI key")
+        return None
+    
+    # Get English label
+    english_label = None
+    for s, p, o in g.triples((node, RDFS.label, None)):
+        if isinstance(o, Literal) and (o.language is None or o.language == 'en'):
+            english_label = str(o)
+            break
+    
+    # Initialize node data
+    node_data = {
+        "key": node_key,
+        "uri": node_uri,
+        "timestamp": format_time(current_time),
+        "context": [],
+        "failed_urls": [],
+        "parents": [],
+        "children": [],
+        "has_parent_in_kb": False,
+        "languages": ["en"] if english_label else [],
+        "deprecated": False,
+        "country": None,
+        "source": None,
+        "labels": {"en": english_label} if english_label else {},
+        "definitions": {},
+        "class_not_found": False
+    }
+    
+    # Fetch SOLI metadata
+    soli_data = fetch_soli_metadata(node_uri)
+    if soli_data:
+        if "class_not_found" in soli_data:
+            node_data["class_not_found"] = True
+        else:
+            # Update basic metadata
+            node_data.update({
+                "preferred_label": soli_data.get("preferred_label"),
+                "alternative_labels": soli_data.get("alternative_labels", []),
+                "definition": soli_data.get("definition"),
+                "translations": soli_data.get("translations", {}),
+                "deprecated": soli_data.get("deprecated", False),
+                "country": soli_data.get("country"),
+                "source": soli_data.get("source"),
+                "notes": soli_data.get("notes", []),
+                "examples": soli_data.get("examples", []),
+                "history_note": soli_data.get("history_note"),
+                "editorial_note": soli_data.get("editorial_note"),
+                "in_scheme": soli_data.get("in_scheme"),
+                "identifier": soli_data.get("identifier"),
+                "description": soli_data.get("description")
+            })
+            
+            # Add languages from translations
+            if soli_data.get("translations"):
+                for lang in soli_data["translations"].keys():
+                    if lang not in node_data["languages"]:
+                        node_data["languages"].append(lang)
+            
+            # Process parents from sub_class_of
+            for parent in soli_data.get("sub_class_of", []):
+                if is_soli_url(parent):
+                    parent_key = extract_soli_key(parent)
+                    if parent_key and parent_key not in node_data["parents"]:
+                        node_data["parents"].append(parent_key)
+            
+            # Process children
+            for child in soli_data.get("parent_class_of", []):
+                if is_soli_url(child):
+                    child_key = extract_soli_key(child)
+                    if child_key and child_key not in node_data["children"]:
+                        node_data["children"].append(child_key)
+            
+            # Process URLs for context
+            urls_to_process = []
+            if soli_data.get("is_defined_by"):
+                urls_to_process.append(soli_data["is_defined_by"])
+            urls_to_process.extend(soli_data.get("see_also", []))
+            
+            if urls_to_process:
+                context, failed = process_urls_for_context(urls_to_process, cache_dir, current_time)
+                node_data["context"].extend(context)
+                node_data["failed_urls"].extend(failed)
     
     return node_data
 
@@ -137,7 +186,9 @@ def build_knowledge_graph(owl_file: str, output_file: str = "test-kb.json", limi
         output_file: Path to output JSON file
         limit: Optional int to limit number of nodes (for testing)
     """
+    current_time = "2025-01-11T14:05:04-08:00"  # Use provided time
     logger.info(f"Building knowledge graph from {owl_file}")
+    
     g = Graph()
     try:
         g.parse(owl_file)
@@ -163,11 +214,16 @@ def build_knowledge_graph(owl_file: str, output_file: str = "test-kb.json", limi
     kb.setdefault("refs", [])
     kb.setdefault("failed_urls", [])
     
-    # Process classes and properties
+    # Process AnnotationProperty nodes
     nodes = []
-    for node_type in [(OWL.Class, "class"), (OWL.ObjectProperty, "property")]:
-        for node in g.subjects(RDF.type, node_type[0]):
-            nodes.append((node, node_type[1]))
+    for node in g.subjects(RDF.type, OWL.AnnotationProperty):
+        # Check if node has a label
+        has_label = False
+        for _ in g.triples((node, RDFS.label, None)):
+            has_label = True
+            break
+        if has_label and is_soli_url(str(node)):
+            nodes.append((node, "annotation"))
     
     if limit:
         nodes = nodes[:limit]
@@ -175,7 +231,7 @@ def build_knowledge_graph(owl_file: str, output_file: str = "test-kb.json", limi
     # Process each node
     for node, node_type in nodes:
         logger.info(f"Processing {node_type}: {node}")
-        node_data = process_node(g, node, cache_dir)
+        node_data = process_node(g, node, cache_dir, current_time)
         
         if node_data:
             node_data["type"] = node_type
@@ -193,6 +249,15 @@ def build_knowledge_graph(owl_file: str, output_file: str = "test-kb.json", limi
                     existing_node.get("failed_urls", []) + 
                     node_data.get("failed_urls", [])
                 ))
+            
+            # Check if parents exist in KB
+            for parent_key in node_data["parents"]:
+                if parent_key in kb["nodes"]:
+                    node_data["has_parent_in_kb"] = True
+                    # Add this node as child to parent if not already there
+                    parent_node = kb["nodes"][parent_key]
+                    if node_key not in parent_node.get("children", []):
+                        parent_node.setdefault("children", []).append(node_key)
             
             kb["nodes"][node_key] = node_data
             
