@@ -35,12 +35,17 @@ The dataset creation is split into two steps:
 
 1. Build the Knowledge Base:
 ```bash
-python build_knowledge.py
+python build_knowledge.py --owl-input SOLI/SOLI.owl --output kb.json --limit 50
 ```
+
+The `--limit` flag controls how many classes and properties to process:
+- `--limit 50`: Process only 50 classes/properties (good for testing)
+- `--limit all`: Process all classes/properties (for full dataset creation)
+
 This will:
 - Build a knowledge graph from the OWL file
 - Download and clean referenced documents using AI agents
-- Save the knowledge base to `knowledge_base.json`
+- Save the knowledge base to the specified output file
 
 2. Create the Instruction Dataset:
 ```bash
