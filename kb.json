@@ -1,0 +1,1203 @@
+{
+  "nodes": {
+    "RB92n5NAKQsEoPaonOcrwkh": {
+      "key": "RB92n5NAKQsEoPaonOcrwkh",
+      "uri": "https://soli.openlegalstandard.org/RB92n5NAKQsEoPaonOcrwkh",
+      "timestamp": "20250111144219",
+      "context": [
+        {
+          "url": "https://soli.openlegalstandard.org/RB92n5NAKQsEoPaonOcrwkh",
+          "text": "Minnesota District Court - Douglas County refers to a specific court within the Minnesota District Court system that has jurisdiction over legal matters in Douglas County, Minnesota.",
+          "type": "definition",
+          "time": "20250111144219"
+        }
+      ],
+      "failed_urls": [
+        "https://soli.openlegalstandard.org/RB92n5NAKQsEoPaonOcrwkh"
+      ],
+      "parents": [
+        "https://soli.openlegalstandard.org/RxLV9XEaDWbDIA8N1fl2fM"
+      ],
+      "children": [],
+      "content_urls": [],
+      "has_parent_in_kb": false,
+      "languages": [
+        "en"
+      ],
+      "deprecated": false,
+      "country": null,
+      "source": null,
+      "labels": {
+        "en": "Minnesota District Court - Douglas County"
+      },
+      "definitions": {},
+      "class_not_found": false,
+      "downloadedRefs": [],
+      "type": "class",
+      "preferred_label": null,
+      "alternative_labels": [],
+      "definition": "Minnesota District Court - Douglas County refers to a specific court within the Minnesota District Court system that has jurisdiction over legal matters in Douglas County, Minnesota.",
+      "translations": {}
+    },
+    "RDaNIjG3Bz5mnMEssDHDHwf": {
+      "key": "RDaNIjG3Bz5mnMEssDHDHwf",
+      "uri": "https://soli.openlegalstandard.org/RDaNIjG3Bz5mnMEssDHDHwf",
+      "timestamp": "20250111144219",
+      "context": [
+        {
+          "url": "https://soli.openlegalstandard.org/RDaNIjG3Bz5mnMEssDHDHwf",
+          "text": "A court's body of procedural rules governing criminal actions.",
+          "type": "definition",
+          "time": "20250111144219"
+        }
+      ],
+      "failed_urls": [
+        "https://soli.openlegalstandard.org/RDaNIjG3Bz5mnMEssDHDHwf"
+      ],
+      "parents": [
+        "https://soli.openlegalstandard.org/RDahKqXGI4trE9V8iw0YfR0"
+      ],
+      "children": [
+        "https://soli.openlegalstandard.org/R7d649KKGBfJyGpUlJw50Y1",
+        "https://soli.openlegalstandard.org/RCYvQpgG6Mv1JOAf7tSjjgV"
+      ],
+      "content_urls": [],
+      "has_parent_in_kb": false,
+      "languages": [
+        "en",
+        "pt-br",
+        "fr-fr",
+        "de-de",
+        "ja-jp",
+        "zh-cn"
+      ],
+      "deprecated": false,
+      "country": null,
+      "source": null,
+      "labels": {
+        "en": "Rules of Civil Procedure"
+      },
+      "definitions": {},
+      "class_not_found": false,
+      "downloadedRefs": [],
+      "type": "class",
+      "preferred_label": null,
+      "alternative_labels": [],
+      "definition": "A court's body of procedural rules governing criminal actions.",
+      "translations": {
+        "pt-br": "C\u00f3digo de Processo Civil",
+        "fr-fr": "R\u00e8gles de proc\u00e9dure civile",
+        "de-de": "Zivilprozessordnung",
+        "ja-jp": "\u6c11\u4e8b\u8a34\u8a1f\u898f\u5247",
+        "zh-cn": "\u6c11\u4e8b\u8bc9\u8bbc\u89c4\u5219"
+      }
+    },
+    "RCnT6mtIS5PFqLHFn37D1cS": {
+      "key": "RCnT6mtIS5PFqLHFn37D1cS",
+      "uri": "https://soli.openlegalstandard.org/RCnT6mtIS5PFqLHFn37D1cS",
+      "timestamp": "20250111144219",
+      "context": [
+        {
+          "url": "https://soli.openlegalstandard.org/RCnT6mtIS5PFqLHFn37D1cS",
+          "text": "The Texas Court of Appeals - 1st is a specific intermediate appellate court in Texas that hears appeals from trial courts in its jurisdiction.",
+          "type": "definition",
+          "time": "20250111144219"
+        }
+      ],
+      "failed_urls": [
+        "https://soli.openlegalstandard.org/RCnT6mtIS5PFqLHFn37D1cS"
+      ],
+      "parents": [
+        "https://soli.openlegalstandard.org/RD5301cBC22f7951939C20e0"
+      ],
+      "children": [],
+      "content_urls": [],
+      "has_parent_in_kb": false,
+      "languages": [
+        "en"
+      ],
+      "deprecated": false,
+      "country": null,
+      "source": null,
+      "labels": {
+        "en": "Texas Court of Appeals - 1st"
+      },
+      "definitions": {},
+      "class_not_found": false,
+      "downloadedRefs": [],
+      "type": "class",
+      "preferred_label": null,
+      "alternative_labels": [],
+      "definition": "The Texas Court of Appeals - 1st is a specific intermediate appellate court in Texas that hears appeals from trial courts in its jurisdiction.",
+      "translations": {}
+    },
+    "R7qfDUdV0uQYPGsrjTf3QDf": {
+      "key": "R7qfDUdV0uQYPGsrjTf3QDf",
+      "uri": "https://soli.openlegalstandard.org/R7qfDUdV0uQYPGsrjTf3QDf",
+      "timestamp": "20250111144219",
+      "context": [
+        {
+          "url": "https://soli.openlegalstandard.org/R7qfDUdV0uQYPGsrjTf3QDf",
+          "text": "Involuntary employment termination event refers to the act of an employer initiating the separation of an employee from their job. Reasons can range from downsizing and organizational restructuring to performance issues or misconduct.",
+          "type": "definition",
+          "time": "20250111144219"
+        }
+      ],
+      "failed_urls": [
+        "https://soli.openlegalstandard.org/R7qfDUdV0uQYPGsrjTf3QDf"
+      ],
+      "parents": [
+        "https://soli.openlegalstandard.org/RCy69ZSLkXNMIWCj0nv9qzO"
+      ],
+      "children": [
+        "https://soli.openlegalstandard.org/RKarf0DKzL0qZLGQluthCY"
+      ],
+      "content_urls": [],
+      "has_parent_in_kb": false,
+      "languages": [
+        "en"
+      ],
+      "deprecated": false,
+      "country": null,
+      "source": null,
+      "labels": {
+        "en": "Involuntary Employment Termination Event"
+      },
+      "definitions": {},
+      "class_not_found": false,
+      "downloadedRefs": [],
+      "type": "class",
+      "preferred_label": null,
+      "alternative_labels": [],
+      "definition": "Involuntary employment termination event refers to the act of an employer initiating the separation of an employee from their job. Reasons can range from downsizing and organizational restructuring to performance issues or misconduct.",
+      "translations": {}
+    },
+    "RD3TwEtezlhaJxwaSHCibko": {
+      "key": "RD3TwEtezlhaJxwaSHCibko",
+      "uri": "https://soli.openlegalstandard.org/RD3TwEtezlhaJxwaSHCibko",
+      "timestamp": "20250111144219",
+      "context": [
+        {
+          "url": "https://soli.openlegalstandard.org/RD3TwEtezlhaJxwaSHCibko",
+          "text": "A bankruptcy plan is a legal document that outlines the proposed financial restructuring or liquidation of a bankrupt entity, including the distribution of assets and repayment of debts, as required by the specific chapter of the bankruptcy code under which the entity is filing.",
+          "type": "definition",
+          "time": "20250111144219"
+        }
+      ],
+      "failed_urls": [
+        "https://soli.openlegalstandard.org/RD3TwEtezlhaJxwaSHCibko"
+      ],
+      "parents": [
+        "https://soli.openlegalstandard.org/R8zijLH2GH0SxOhIdzeDOs3"
+      ],
+      "children": [
+        "https://soli.openlegalstandard.org/R1W2OHCPzGzlYUi4okC4bJ",
+        "https://soli.openlegalstandard.org/R8gANesaVbicQEW96YgGdjz",
+        "https://soli.openlegalstandard.org/RB96AUYMRGHIROmwO9zam3j",
+        "https://soli.openlegalstandard.org/RBibBIyzH84MfJ4IQt08qvY",
+        "https://soli.openlegalstandard.org/RDLQDOiX6GNalq6NwrYeQWy"
+      ],
+      "content_urls": [
+        "https://www.canb.uscourts.gov/ecf/manuals/chapter-13-plans"
+      ],
+      "has_parent_in_kb": false,
+      "languages": [
+        "en",
+        "en-gb",
+        "de-de",
+        "es-es",
+        "es-mx",
+        "pt-br",
+        "fr-fr",
+        "he-il",
+        "hi-in",
+        "zh-cn",
+        "ja-jp"
+      ],
+      "deprecated": false,
+      "country": null,
+      "source": null,
+      "labels": {
+        "en": "Bankruptcy Plans"
+      },
+      "definitions": {},
+      "class_not_found": false,
+      "downloadedRefs": [],
+      "type": "class",
+      "preferred_label": null,
+      "alternative_labels": [],
+      "definition": "A bankruptcy plan is a legal document that outlines the proposed financial restructuring or liquidation of a bankrupt entity, including the distribution of assets and repayment of debts, as required by the specific chapter of the bankruptcy code under which the entity is filing.",
+      "translations": {
+        "en-gb": "Bankruptcy Plans",
+        "de-de": "Insolvenzpl\u00e4ne",
+        "es-es": "Planes de bancarrota",
+        "es-mx": "Planes de quiebra",
+        "pt-br": "Planos de fal\u00eancia",
+        "fr-fr": "Plans de faillite",
+        "he-il": "\u05ea\u05d5\u05db\u05e0\u05d9\u05d5\u05ea \u05e4\u05e9\u05d9\u05d8\u05ea \u05e8\u05d2\u05dc",
+        "hi-in": "\u0926\u093f\u0935\u093e\u0932\u093f\u092f\u093e\u092a\u0928 \u092f\u094b\u091c\u0928\u093e\u090f\u0902",
+        "zh-cn": "\u7834\u4ea7\u8ba1\u5212",
+        "ja-jp": "\u7834\u7523\u8a08\u753b"
+      }
+    },
+    "R9bMbVma5UtRo0U4Nf93dF0": {
+      "key": "R9bMbVma5UtRo0U4Nf93dF0",
+      "uri": "https://soli.openlegalstandard.org/R9bMbVma5UtRo0U4Nf93dF0",
+      "timestamp": "20250111144219",
+      "context": [
+        {
+          "url": "https://soli.openlegalstandard.org/R9bMbVma5UtRo0U4Nf93dF0",
+          "text": "A 16th Amendment claim is a legal assertion related to the Sixteenth Amendment of the United States Constitution, which authorizes Congress to levy an income tax without apportioning it among the states or basing it on the United States Census. This amendment gives the federal government the power to tax individual and corporate incomes.",
+          "type": "definition",
+          "time": "20250111144219"
+        }
+      ],
+      "failed_urls": [
+        "https://soli.openlegalstandard.org/R9bMbVma5UtRo0U4Nf93dF0"
+      ],
+      "parents": [
+        "https://soli.openlegalstandard.org/R7MGQ9xUx0PxGLp5yxprdpZ"
+      ],
+      "children": [],
+      "content_urls": [],
+      "has_parent_in_kb": false,
+      "languages": [
+        "en",
+        "de-de",
+        "en-gb",
+        "hi-in",
+        "ja-jp",
+        "es-es",
+        "es-mx",
+        "pt-br",
+        "fr-fr",
+        "he-il",
+        "zh-cn"
+      ],
+      "deprecated": false,
+      "country": null,
+      "source": null,
+      "labels": {
+        "en": "16th Amendment Claim"
+      },
+      "definitions": {},
+      "class_not_found": false,
+      "downloadedRefs": [],
+      "type": "class",
+      "preferred_label": null,
+      "alternative_labels": [],
+      "definition": "A 16th Amendment claim is a legal assertion related to the Sixteenth Amendment of the United States Constitution, which authorizes Congress to levy an income tax without apportioning it among the states or basing it on the United States Census. This amendment gives the federal government the power to tax individual and corporate incomes.",
+      "translations": {
+        "de-de": "16. \u00c4nderungsantrag",
+        "en-gb": "16th Amendment Claim",
+        "hi-in": "16\u0935\u0940\u0902 \u0938\u0902\u0936\u094b\u0927\u0928 \u0926\u093e\u0935\u093e",
+        "ja-jp": "16\u6539\u6b63\u8acb\u6c42",
+        "es-es": "Reclamaci\u00f3n de la Decimosexta Enmienda",
+        "es-mx": "Reclamo de la Decimosexta Enmienda",
+        "pt-br": "Reivindica\u00e7\u00e3o da 16\u00aa Emenda",
+        "fr-fr": "R\u00e9clamation de 16\u00e8me amendement",
+        "he-il": "\u05ea\u05d1\u05d9\u05e2\u05ea \u05d4\u05ea\u05d9\u05e7\u05d5\u05df \u05d4\u05e9\u05d9\u05e9\u05d4-\u05e2\u05e9\u05e8",
+        "zh-cn": "\u7b2c16\u4fee\u6b63\u6848\u7d22\u8d54"
+      }
+    },
+    "R9kPeaR5Knf1SM893ZO1PK8": {
+      "key": "R9kPeaR5Knf1SM893ZO1PK8",
+      "uri": "https://soli.openlegalstandard.org/R9kPeaR5Knf1SM893ZO1PK8",
+      "timestamp": "20250111144219",
+      "context": [],
+      "failed_urls": [
+        "https://soli.openlegalstandard.org/R9kPeaR5Knf1SM893ZO1PK8"
+      ],
+      "parents": [
+        "https://soli.openlegalstandard.org/RC1ceWXE3emNHpYlrOvvmxG"
+      ],
+      "children": [],
+      "content_urls": [],
+      "has_parent_in_kb": false,
+      "languages": [
+        "en"
+      ],
+      "deprecated": false,
+      "country": null,
+      "source": null,
+      "labels": {
+        "en": "Turtle Mountain Band of Chippewa Indians of North Dakota"
+      },
+      "definitions": {},
+      "class_not_found": false,
+      "downloadedRefs": [],
+      "type": "class",
+      "preferred_label": null,
+      "alternative_labels": [],
+      "definition": null,
+      "translations": {}
+    },
+    "RCcWasK7LnVMXipm7uQAOA2": {
+      "key": "RCcWasK7LnVMXipm7uQAOA2",
+      "uri": "https://soli.openlegalstandard.org/RCcWasK7LnVMXipm7uQAOA2",
+      "timestamp": "20250111144219",
+      "context": [
+        {
+          "url": "https://soli.openlegalstandard.org/RCcWasK7LnVMXipm7uQAOA2",
+          "text": "A visitor is an individual who temporarily enters a specific location, such as a country, city, or residence, for various purposes. Visitors can include tourists, who travel for leisure and exploration; business visitors, who come for work-related activities; or guests invited to a residence for social or personal reasons. The nature of the visit and applicable regulations, such as visa requirements or entry permissions, can differ based on the visitor's purpose and destination.",
+          "type": "definition",
+          "time": "20250111144219"
+        }
+      ],
+      "failed_urls": [
+        "https://soli.openlegalstandard.org/RCcWasK7LnVMXipm7uQAOA2"
+      ],
+      "parents": [
+        "https://soli.openlegalstandard.org/RCEDL3kMYgjFUEOhOyGp3IE"
+      ],
+      "children": [],
+      "content_urls": [],
+      "has_parent_in_kb": false,
+      "languages": [
+        "en"
+      ],
+      "deprecated": false,
+      "country": null,
+      "source": null,
+      "labels": {
+        "en": "Visitor"
+      },
+      "definitions": {},
+      "class_not_found": false,
+      "downloadedRefs": [],
+      "type": "class",
+      "preferred_label": null,
+      "alternative_labels": [],
+      "definition": "A visitor is an individual who temporarily enters a specific location, such as a country, city, or residence, for various purposes. Visitors can include tourists, who travel for leisure and exploration; business visitors, who come for work-related activities; or guests invited to a residence for social or personal reasons. The nature of the visit and applicable regulations, such as visa requirements or entry permissions, can differ based on the visitor's purpose and destination.",
+      "translations": {}
+    },
+    "RBwUL1KJIJngnQ17RlNcpse": {
+      "key": "RBwUL1KJIJngnQ17RlNcpse",
+      "uri": "https://soli.openlegalstandard.org/RBwUL1KJIJngnQ17RlNcpse",
+      "timestamp": "20250111144219",
+      "context": [
+        {
+          "url": "https://soli.openlegalstandard.org/RBwUL1KJIJngnQ17RlNcpse",
+          "text": "Document describing how to do a particular legal process, often containing links to other documents.",
+          "type": "definition",
+          "time": "20250111144219"
+        }
+      ],
+      "failed_urls": [
+        "https://soli.openlegalstandard.org/RBwUL1KJIJngnQ17RlNcpse"
+      ],
+      "parents": [
+        "https://soli.openlegalstandard.org/RTPFix1eiYqgdushRunICo"
+      ],
+      "children": [],
+      "content_urls": [],
+      "has_parent_in_kb": false,
+      "languages": [
+        "en",
+        "pt-br",
+        "en-gb",
+        "fr-fr",
+        "es-es",
+        "es-mx",
+        "de-de",
+        "he-il",
+        "hi-in",
+        "ja-jp",
+        "zh-cn"
+      ],
+      "deprecated": false,
+      "country": null,
+      "source": null,
+      "labels": {
+        "en": "Guide"
+      },
+      "definitions": {},
+      "class_not_found": false,
+      "downloadedRefs": [],
+      "type": "class",
+      "preferred_label": null,
+      "alternative_labels": [
+        "Practice Note",
+        "Standard Form"
+      ],
+      "definition": "Document describing how to do a particular legal process, often containing links to other documents.",
+      "translations": {
+        "pt-br": "Guia",
+        "en-gb": "Guide",
+        "fr-fr": "Guide",
+        "es-es": "Gu\u00eda",
+        "es-mx": "Gu\u00eda",
+        "de-de": "Leitfaden",
+        "he-il": "\u05de\u05d3\u05e8\u05d9\u05da",
+        "hi-in": "\u0917\u093e\u0907\u0921",
+        "ja-jp": "\u30ac\u30a4\u30c9",
+        "zh-cn": "\u6307\u5357"
+      }
+    },
+    "RBIjupGmQLqpwi89uEk45qA": {
+      "key": "RBIjupGmQLqpwi89uEk45qA",
+      "uri": "https://soli.openlegalstandard.org/RBIjupGmQLqpwi89uEk45qA",
+      "timestamp": "20250111144219",
+      "context": [
+        {
+          "url": "https://soli.openlegalstandard.org/RBIjupGmQLqpwi89uEk45qA",
+          "text": "For a legal proceeding or regulatory filing (e.g., patent registration, trademark registration) that filing's expiration date refers to the expiration date of a specific status, benefit, or action, as indicated in official documents such as visas, permits, or contracts. This date marks the end of the authorized period for a particular activity, residency, or employment, as determined by the relevant regulatory authority",
+          "type": "definition",
+          "time": "20250111144219"
+        }
+      ],
+      "failed_urls": [
+        "https://soli.openlegalstandard.org/RBIjupGmQLqpwi89uEk45qA"
+      ],
+      "parents": [
+        "https://soli.openlegalstandard.org/R7sBKqCcmlK1Dw9HBvKenYy"
+      ],
+      "children": [],
+      "content_urls": [],
+      "has_parent_in_kb": false,
+      "languages": [
+        "en"
+      ],
+      "deprecated": false,
+      "country": null,
+      "source": null,
+      "labels": {
+        "en": "Expiration Date"
+      },
+      "definitions": {},
+      "class_not_found": false,
+      "downloadedRefs": [],
+      "type": "class",
+      "preferred_label": null,
+      "alternative_labels": [
+        "Valid Until Date"
+      ],
+      "definition": "For a legal proceeding or regulatory filing (e.g., patent registration, trademark registration) that filing's expiration date refers to the expiration date of a specific status, benefit, or action, as indicated in official documents such as visas, permits, or contracts. This date marks the end of the authorized period for a particular activity, residency, or employment, as determined by the relevant regulatory authority",
+      "translations": {}
+    },
+    "R8dxOsfM0gsVdvh1SKyl4ub": {
+      "key": "R8dxOsfM0gsVdvh1SKyl4ub",
+      "uri": "https://soli.openlegalstandard.org/R8dxOsfM0gsVdvh1SKyl4ub",
+      "timestamp": "20250111144219",
+      "context": [
+        {
+          "url": "https://soli.openlegalstandard.org/R8dxOsfM0gsVdvh1SKyl4ub",
+          "text": "(Definition of \"Counterfeiting/Forgery\") The altering, copying, or imitation of something, without authority or right, with the intent to deceive or defraud by passing the copy or thing altered or imitated as that which is original or genuine; or the selling, buying, or possession of an altered, copied, or imitated thing with the intent to deceive or defraud.",
+          "type": "definition",
+          "time": "20250111144219"
+        }
+      ],
+      "failed_urls": [
+        "https://soli.openlegalstandard.org/R8dxOsfM0gsVdvh1SKyl4ub"
+      ],
+      "parents": [
+        "https://soli.openlegalstandard.org/RFjY2mO804t9gJNy5Dn4P1"
+      ],
+      "children": [],
+      "content_urls": [
+        "https://ucr.fbi.gov/nibrs/2012/resources/nibrs-offense-definitions"
+      ],
+      "has_parent_in_kb": false,
+      "languages": [
+        "en",
+        "es-es",
+        "es-mx",
+        "pt-br",
+        "fr-fr",
+        "en-gb",
+        "de-de",
+        "he-il",
+        "hi-in",
+        "zh-cn",
+        "ja-jp"
+      ],
+      "deprecated": false,
+      "country": null,
+      "source": null,
+      "labels": {
+        "en": "Forgery"
+      },
+      "definitions": {},
+      "class_not_found": false,
+      "downloadedRefs": [],
+      "type": "class",
+      "preferred_label": null,
+      "alternative_labels": [],
+      "definition": "(Definition of \"Counterfeiting/Forgery\") The altering, copying, or imitation of something, without authority or right, with the intent to deceive or defraud by passing the copy or thing altered or imitated as that which is original or genuine; or the selling, buying, or possession of an altered, copied, or imitated thing with the intent to deceive or defraud.",
+      "translations": {
+        "es-es": "Falsificaci\u00f3n",
+        "es-mx": "Falsificaci\u00f3n",
+        "pt-br": "Falsifica\u00e7\u00e3o",
+        "fr-fr": "Faux",
+        "en-gb": "Forgery",
+        "de-de": "F\u00e4lschung",
+        "he-il": "\u05d6\u05d9\u05d5\u05e3",
+        "hi-in": "\u091c\u093e\u0932\u0938\u093e\u091c\u093c\u0940",
+        "zh-cn": "\u4f2a\u9020",
+        "ja-jp": "\u507d\u9020"
+      }
+    },
+    "R7MXUsspwVFhBmhwbAGdnil": {
+      "key": "R7MXUsspwVFhBmhwbAGdnil",
+      "uri": "https://soli.openlegalstandard.org/R7MXUsspwVFhBmhwbAGdnil",
+      "timestamp": "20250111144219",
+      "context": [
+        {
+          "url": "https://soli.openlegalstandard.org/R7MXUsspwVFhBmhwbAGdnil",
+          "text": "The liability of a notary public officer for negligent acknowledgment refers to the legal responsibility of such an officer for making a mistake or error while performing an acknowledgment, which can result in a malpractice claim or a judicial and procedural tort claim.",
+          "type": "definition",
+          "time": "20250111144219"
+        }
+      ],
+      "failed_urls": [
+        "https://soli.openlegalstandard.org/R7MXUsspwVFhBmhwbAGdnil"
+      ],
+      "parents": [
+        "https://soli.openlegalstandard.org/RGm7jrTspmRi606c5XWZ1z",
+        "https://soli.openlegalstandard.org/RSRxb9psAJdqf8rppoiYI8"
+      ],
+      "children": [],
+      "content_urls": [],
+      "has_parent_in_kb": false,
+      "languages": [
+        "en",
+        "de-de",
+        "en-gb",
+        "es-es",
+        "es-mx",
+        "pt-br",
+        "fr-fr",
+        "he-il",
+        "hi-in",
+        "ja-jp",
+        "zh-cn"
+      ],
+      "deprecated": false,
+      "country": null,
+      "source": null,
+      "labels": {
+        "en": "Notary Public Officer Liability for Negligent Acknowledgment"
+      },
+      "definitions": {},
+      "class_not_found": false,
+      "downloadedRefs": [],
+      "type": "class",
+      "preferred_label": null,
+      "alternative_labels": [],
+      "definition": "The liability of a notary public officer for negligent acknowledgment refers to the legal responsibility of such an officer for making a mistake or error while performing an acknowledgment, which can result in a malpractice claim or a judicial and procedural tort claim.",
+      "translations": {
+        "de-de": "Haftung des Notarbeamten f\u00fcr fahrl\u00e4ssige Anerkennung",
+        "en-gb": "Notary Public Officer Liability for Negligent Acknowledgment",
+        "es-es": "Responsabilidad del Notario P\u00fablico por Reconocimiento Negligente",
+        "es-mx": "Responsabilidad del Notario P\u00fablico por Reconocimiento Negligente",
+        "pt-br": "Responsabilidade do oficial p\u00fablico do not\u00e1rio por reconhecimento negligente",
+        "fr-fr": "Responsabilit\u00e9 de l'officier public de notaire pour reconnaissance n\u00e9gligente",
+        "he-il": "\u05d0\u05d7\u05e8\u05d9\u05d5\u05ea \u05e2\u05d5\"\u05d3 \u05e8\u05e9\u05de\u05d9 \u05e2\u05d1\u05d5\u05e8 \u05d4\u05db\u05e8\u05d4 \u05e9\u05d2\u05d5\u05d9\u05d4",
+        "hi-in": "\u0917\u0948\u0930-\u0938\u093e\u0935\u0927\u093e\u0928 \u0905\u0927\u093f\u0915\u093e\u0930\u0940 \u0915\u0947 \u0932\u093f\u090f \u0928\u094b\u091f\u0930\u0940 \u092a\u092c\u094d\u0932\u093f\u0915 \u091c\u093f\u092e\u094d\u092e\u0947\u0926\u093e\u0930\u0940",
+        "ja-jp": "\u516c\u8a3c\u4eba\u306e\u904e\u5931\u627f\u8a8d\u306b\u5bfe\u3059\u308b\u8cac\u4efb",
+        "zh-cn": "\u516c\u8bc1\u4eba\u56e0\u758f\u5ffd\u627f\u8ba4\u800c\u627f\u62c5\u8d23\u4efb"
+      }
+    },
+    "R9v922zEDjLTzShv6ZTmRGm": {
+      "key": "R9v922zEDjLTzShv6ZTmRGm",
+      "uri": "https://soli.openlegalstandard.org/R9v922zEDjLTzShv6ZTmRGm",
+      "timestamp": "20250111144219",
+      "context": [
+        {
+          "url": "https://soli.openlegalstandard.org/R9v922zEDjLTzShv6ZTmRGm",
+          "text": "Custody Law refers to the legal rules and regulations that govern the care, control, and maintenance of children in cases of separation or divorce.",
+          "type": "definition",
+          "time": "20250111144219"
+        }
+      ],
+      "failed_urls": [
+        "https://soli.openlegalstandard.org/R9v922zEDjLTzShv6ZTmRGm"
+      ],
+      "parents": [
+        "https://soli.openlegalstandard.org/R78xJfSMpJ2ZUUUlYdzfUvC",
+        "https://soli.openlegalstandard.org/RBFgL4Dth9VONjmIdH0bEOs"
+      ],
+      "children": [],
+      "content_urls": [],
+      "has_parent_in_kb": false,
+      "languages": [
+        "en",
+        "en-gb",
+        "fr-fr",
+        "pt-br",
+        "es-es",
+        "es-mx",
+        "de-de",
+        "he-il",
+        "hi-in",
+        "zh-cn",
+        "ja-jp"
+      ],
+      "deprecated": false,
+      "country": null,
+      "source": null,
+      "labels": {
+        "en": "Custody Law"
+      },
+      "definitions": {},
+      "class_not_found": false,
+      "downloadedRefs": [],
+      "type": "class",
+      "preferred_label": null,
+      "alternative_labels": [],
+      "definition": "Custody Law refers to the legal rules and regulations that govern the care, control, and maintenance of children in cases of separation or divorce.",
+      "translations": {
+        "en-gb": "Custody Law",
+        "fr-fr": "Droit de garde",
+        "pt-br": "Lei de cust\u00f3dia",
+        "es-es": "Ley de Custodia",
+        "es-mx": "Ley de Custodia",
+        "de-de": "Sorgerecht",
+        "he-il": "\u05d7\u05d5\u05e7 \u05d4\u05d0\u05e4\u05d5\u05d8\u05e8\u05d5\u05e4\u05d5\u05e1",
+        "hi-in": "\u0915\u0938\u094d\u091f\u0921\u0940 \u0915\u093e\u0928\u0942\u0928",
+        "zh-cn": "\u76d1\u62a4\u6cd5",
+        "ja-jp": "\u76e3\u8b77\u6cd5"
+      }
+    },
+    "RBcwpjAzBR8decXxlKlehsC": {
+      "key": "RBcwpjAzBR8decXxlKlehsC",
+      "uri": "https://soli.openlegalstandard.org/RBcwpjAzBR8decXxlKlehsC",
+      "timestamp": "20250111144219",
+      "context": [
+        {
+          "url": "https://soli.openlegalstandard.org/RBcwpjAzBR8decXxlKlehsC",
+          "text": "The New York Supreme Court - Franklin County is a court of general jurisdiction located in Franklin County, New York, which is a subdivision of the New York Supreme Court.",
+          "type": "definition",
+          "time": "20250111144219"
+        }
+      ],
+      "failed_urls": [
+        "https://soli.openlegalstandard.org/RBcwpjAzBR8decXxlKlehsC"
+      ],
+      "parents": [
+        "https://soli.openlegalstandard.org/R06956a0657387D6513A8528"
+      ],
+      "children": [],
+      "content_urls": [],
+      "has_parent_in_kb": false,
+      "languages": [
+        "en"
+      ],
+      "deprecated": false,
+      "country": null,
+      "source": null,
+      "labels": {
+        "en": "New York Supreme Court - Franklin County"
+      },
+      "definitions": {},
+      "class_not_found": false,
+      "downloadedRefs": [],
+      "type": "class",
+      "preferred_label": null,
+      "alternative_labels": [],
+      "definition": "The New York Supreme Court - Franklin County is a court of general jurisdiction located in Franklin County, New York, which is a subdivision of the New York Supreme Court.",
+      "translations": {}
+    },
+    "R9EE4MizkGCUul3HbdMg3l9": {
+      "key": "R9EE4MizkGCUul3HbdMg3l9",
+      "uri": "https://soli.openlegalstandard.org/R9EE4MizkGCUul3HbdMg3l9",
+      "timestamp": "20250111144219",
+      "context": [
+        {
+          "url": "https://soli.openlegalstandard.org/R9EE4MizkGCUul3HbdMg3l9",
+          "text": "Munda languages are a group of languages that belong to the Austroasiatic language family and are spoken in parts of India and Bangladesh.",
+          "type": "definition",
+          "time": "20250111144219"
+        }
+      ],
+      "failed_urls": [
+        "https://soli.openlegalstandard.org/R9EE4MizkGCUul3HbdMg3l9"
+      ],
+      "parents": [
+        "https://soli.openlegalstandard.org/RDOvAHsvY8TKJ1O1orXPM9o"
+      ],
+      "children": [],
+      "content_urls": [],
+      "has_parent_in_kb": false,
+      "languages": [
+        "en",
+        "fr-fr",
+        "pt-br",
+        "de-de",
+        "ja-jp",
+        "zh-cn"
+      ],
+      "deprecated": false,
+      "country": null,
+      "source": null,
+      "labels": {
+        "en": "Munda languages"
+      },
+      "definitions": {},
+      "class_not_found": false,
+      "downloadedRefs": [],
+      "type": "class",
+      "preferred_label": null,
+      "alternative_labels": [],
+      "definition": "Munda languages are a group of languages that belong to the Austroasiatic language family and are spoken in parts of India and Bangladesh.",
+      "translations": {
+        "fr-fr": "Langues munda",
+        "pt-br": "L\u00ednguas munda",
+        "de-de": "Munda-Sprachen",
+        "ja-jp": "\u30e0\u30f3\u30c0\u8a9e\u65cf",
+        "zh-cn": "\u8499\u8fbe\u8bed\u7cfb"
+      }
+    },
+    "RCPvkWuRYuJnVkrp50ODImF": {
+      "key": "RCPvkWuRYuJnVkrp50ODImF",
+      "uri": "https://soli.openlegalstandard.org/RCPvkWuRYuJnVkrp50ODImF",
+      "timestamp": "20250111144219",
+      "context": [
+        {
+          "url": "https://soli.openlegalstandard.org/RCPvkWuRYuJnVkrp50ODImF",
+          "text": "Ineffective Assistance of Counsel refers to a claim made by a defendant that their attorney's performance during a criminal trial or appeal was so deficient that it deprived them of their constitutional right to a fair trial.",
+          "type": "definition",
+          "time": "20250111144219"
+        }
+      ],
+      "failed_urls": [
+        "https://soli.openlegalstandard.org/RCPvkWuRYuJnVkrp50ODImF"
+      ],
+      "parents": [
+        "https://soli.openlegalstandard.org/R7z9q6EKXwifsayj0YR6x58",
+        "https://soli.openlegalstandard.org/R8mREFTbCVNHGAdqneLSd0d"
+      ],
+      "children": [],
+      "content_urls": [],
+      "has_parent_in_kb": false,
+      "languages": [
+        "en",
+        "es-es",
+        "es-mx",
+        "fr-fr",
+        "pt-br",
+        "en-gb",
+        "de-de",
+        "he-il",
+        "hi-in",
+        "ja-jp",
+        "zh-cn"
+      ],
+      "deprecated": false,
+      "country": null,
+      "source": null,
+      "labels": {
+        "en": "Ineffective Assistance of Counsel"
+      },
+      "definitions": {},
+      "class_not_found": false,
+      "downloadedRefs": [],
+      "type": "class",
+      "preferred_label": "Deficient Representation",
+      "alternative_labels": [],
+      "definition": "Ineffective Assistance of Counsel refers to a claim made by a defendant that their attorney's performance during a criminal trial or appeal was so deficient that it deprived them of their constitutional right to a fair trial.",
+      "translations": {
+        "es-es": "Asistencia Inefectiva del Abogado",
+        "es-mx": "Asistencia Inefectiva del Abogado",
+        "fr-fr": "Assistance inefficace d'un avocat",
+        "pt-br": "Assist\u00eancia jur\u00eddica ineficaz",
+        "en-gb": "Ineffective Assistance of Counsel",
+        "de-de": "Unwirksame Verteidigung",
+        "he-il": "\u05e1\u05d9\u05d5\u05e2 \u05dc\u05d0 \u05d9\u05e2\u05d9\u05dc \u05e9\u05dc \u05e2\u05d5\"\u05d3",
+        "hi-in": "\u0935\u0915\u0940\u0932 \u0915\u0940 \u0905\u0938\u092b\u0932 \u0938\u0939\u093e\u092f\u0924\u093e",
+        "ja-jp": "\u5f01\u8b77\u58eb\u306e\u7121\u52b9\u306a\u63f4\u52a9",
+        "zh-cn": "\u5f8b\u5e08\u65e0\u6548\u8fa9\u62a4"
+      }
+    },
+    "RBtZFVleTznsPmr5BJaar9c": {
+      "key": "RBtZFVleTznsPmr5BJaar9c",
+      "uri": "https://soli.openlegalstandard.org/RBtZFVleTznsPmr5BJaar9c",
+      "timestamp": "20250111144219",
+      "context": [
+        {
+          "url": "https://soli.openlegalstandard.org/RBtZFVleTznsPmr5BJaar9c",
+          "text": "The concept of \"Personal Jurisdiction by Consent\" refers to a court's authority over a party in a legal matter based on that party's voluntary agreement or submission to the court's jurisdiction, rather than any traditional basis for jurisdiction such as physical presence or domicile.",
+          "type": "definition",
+          "time": "20250111144219"
+        }
+      ],
+      "failed_urls": [
+        "https://soli.openlegalstandard.org/RBtZFVleTznsPmr5BJaar9c"
+      ],
+      "parents": [
+        "https://soli.openlegalstandard.org/R7X4vuBVsbGf69DAu7Xotdw"
+      ],
+      "children": [],
+      "content_urls": [],
+      "has_parent_in_kb": false,
+      "languages": [
+        "en",
+        "fr-fr",
+        "es-es",
+        "es-mx",
+        "pt-br",
+        "en-gb",
+        "de-de",
+        "he-il",
+        "hi-in",
+        "ja-jp",
+        "zh-cn"
+      ],
+      "deprecated": false,
+      "country": null,
+      "source": null,
+      "labels": {
+        "en": "Personal Jurisdiction by Consent"
+      },
+      "definitions": {},
+      "class_not_found": false,
+      "downloadedRefs": [],
+      "type": "class",
+      "preferred_label": null,
+      "alternative_labels": [],
+      "definition": "The concept of \"Personal Jurisdiction by Consent\" refers to a court's authority over a party in a legal matter based on that party's voluntary agreement or submission to the court's jurisdiction, rather than any traditional basis for jurisdiction such as physical presence or domicile.",
+      "translations": {
+        "fr-fr": "Juridiction personnelle par consentement",
+        "es-es": "Jurisdicci\u00f3n Personal por Consentimiento",
+        "es-mx": "Jurisdicci\u00f3n Personal por Consentimiento",
+        "pt-br": "Jurisdi\u00e7\u00e3o pessoal por consentimento",
+        "en-gb": "Personal Jurisdiction by Consent",
+        "de-de": "Pers\u00f6nliche Zust\u00e4ndigkeit durch Einwilligung",
+        "he-il": "\u05e9\u05d9\u05e4\u05d5\u05d8 \u05d0\u05d9\u05e9\u05d9 \u05e2\u05dc \u05d9\u05d3\u05d9 \u05d4\u05e1\u05db\u05de\u05d4",
+        "hi-in": "\u0938\u0939\u092e\u0924\u093f \u0926\u094d\u0935\u093e\u0930\u093e \u0935\u094d\u092f\u0915\u094d\u0924\u093f\u0917\u0924 \u0905\u0927\u093f\u0915\u0930\u0923",
+        "ja-jp": "\u540c\u610f\u306b\u3088\u308b\u500b\u4eba\u7ba1\u8f44\u6a29",
+        "zh-cn": "\u540c\u610f\u4e2a\u4eba\u7ba1\u8f96\u6743"
+      }
+    },
+    "RBBmq8h5E89w78FxiAWlmHR": {
+      "key": "RBBmq8h5E89w78FxiAWlmHR",
+      "uri": "https://soli.openlegalstandard.org/RBBmq8h5E89w78FxiAWlmHR",
+      "timestamp": "20250111144219",
+      "context": [
+        {
+          "url": "https://soli.openlegalstandard.org/RBBmq8h5E89w78FxiAWlmHR",
+          "text": "The New York Supreme Court - Yates County is a court of general jurisdiction located in Yates County, New York, which is a subdivision of the New York Supreme Court.",
+          "type": "definition",
+          "time": "20250111144219"
+        }
+      ],
+      "failed_urls": [
+        "https://soli.openlegalstandard.org/RBBmq8h5E89w78FxiAWlmHR"
+      ],
+      "parents": [
+        "https://soli.openlegalstandard.org/R06956a0657387D6513A8528"
+      ],
+      "children": [],
+      "content_urls": [],
+      "has_parent_in_kb": false,
+      "languages": [
+        "en"
+      ],
+      "deprecated": false,
+      "country": null,
+      "source": null,
+      "labels": {
+        "en": "New York Supreme Court - Yates County"
+      },
+      "definitions": {},
+      "class_not_found": false,
+      "downloadedRefs": [],
+      "type": "class",
+      "preferred_label": null,
+      "alternative_labels": [],
+      "definition": "The New York Supreme Court - Yates County is a court of general jurisdiction located in Yates County, New York, which is a subdivision of the New York Supreme Court.",
+      "translations": {}
+    },
+    "RBbkwoH1uH2PhTq4RgSutqL": {
+      "key": "RBbkwoH1uH2PhTq4RgSutqL",
+      "uri": "https://soli.openlegalstandard.org/RBbkwoH1uH2PhTq4RgSutqL",
+      "timestamp": "20250111144219",
+      "context": [
+        {
+          "url": "https://soli.openlegalstandard.org/RBbkwoH1uH2PhTq4RgSutqL",
+          "text": "A requirement for the buyer's explicit agreement to certain terms or conditions, which is included in an affirmative covenant.",
+          "type": "definition",
+          "time": "20250111144219"
+        }
+      ],
+      "failed_urls": [
+        "https://soli.openlegalstandard.org/RBbkwoH1uH2PhTq4RgSutqL"
+      ],
+      "parents": [
+        "https://soli.openlegalstandard.org/RVcQsyiR3zEN86uQG2Onsy"
+      ],
+      "children": [],
+      "content_urls": [],
+      "has_parent_in_kb": false,
+      "languages": [
+        "en",
+        "en-gb",
+        "de-de",
+        "fr-fr",
+        "es-es",
+        "es-mx",
+        "pt-br",
+        "he-il",
+        "hi-in",
+        "ja-jp",
+        "zh-cn"
+      ],
+      "deprecated": false,
+      "country": null,
+      "source": null,
+      "labels": {
+        "en": "Buyer Consent Requirement Language"
+      },
+      "definitions": {},
+      "class_not_found": false,
+      "downloadedRefs": [],
+      "type": "class",
+      "preferred_label": null,
+      "alternative_labels": [],
+      "definition": "A requirement for the buyer's explicit agreement to certain terms or conditions, which is included in an affirmative covenant.",
+      "translations": {
+        "en-gb": "Buyer Consent Requirement Language",
+        "de-de": "K\u00e4ufer-Zustimmungsanforderungssprache",
+        "fr-fr": "Langage des exigences de consentement de l'acheteur",
+        "es-es": "Lenguaje de Requisito de Consentimiento del Comprador",
+        "es-mx": "Lenguaje de Requisito de Consentimiento del Comprador",
+        "pt-br": "Linguagem de requisitos de consentimento do comprador",
+        "he-il": "\u05e9\u05e4\u05ea \u05d3\u05e8\u05d9\u05e9\u05ea \u05d4\u05e1\u05db\u05de\u05ea \u05d4\u05e7\u05d5\u05e0\u05d4",
+        "hi-in": "\u0916\u0930\u0940\u0926\u093e\u0930 \u0938\u0939\u092e\u0924\u093f \u0906\u0935\u0936\u094d\u092f\u0915\u0924\u093e \u092d\u093e\u0937\u093e",
+        "ja-jp": "\u30d0\u30a4\u30e4\u30fc\u540c\u610f\u8981\u4ef6\u8a00\u8a9e",
+        "zh-cn": "\u4e70\u65b9\u540c\u610f\u8981\u6c42\u8bed\u8a00"
+      }
+    },
+    "RBELr11Jgeg3kZ8qb7nqfC5": {
+      "key": "RBELr11Jgeg3kZ8qb7nqfC5",
+      "uri": "https://soli.openlegalstandard.org/RBELr11Jgeg3kZ8qb7nqfC5",
+      "timestamp": "20250111144219",
+      "context": [
+        {
+          "url": "https://soli.openlegalstandard.org/RBELr11Jgeg3kZ8qb7nqfC5",
+          "text": "Shelf Takedown refers to the process of issuing and selling securities from an existing shelf registration. This method allows companies to quickly and efficiently raise capital by taking down portions of the previously registered securities when market conditions are favorable.",
+          "type": "definition",
+          "time": "20250111144219"
+        }
+      ],
+      "failed_urls": [
+        "https://soli.openlegalstandard.org/RBELr11Jgeg3kZ8qb7nqfC5"
+      ],
+      "parents": [
+        "https://soli.openlegalstandard.org/R8sLSP3fcYlpo2TNHbyFkQ8"
+      ],
+      "children": [],
+      "content_urls": [],
+      "has_parent_in_kb": false,
+      "languages": [
+        "en"
+      ],
+      "deprecated": false,
+      "country": null,
+      "source": null,
+      "labels": {
+        "en": "Shelf Takedown"
+      },
+      "definitions": {},
+      "class_not_found": false,
+      "downloadedRefs": [],
+      "type": "class",
+      "preferred_label": null,
+      "alternative_labels": [
+        "Drawdown",
+        "Market-Responsive Securities Issuance",
+        "Registered Offering Takedown",
+        "Shelf Offering Takedown"
+      ],
+      "definition": "Shelf Takedown refers to the process of issuing and selling securities from an existing shelf registration. This method allows companies to quickly and efficiently raise capital by taking down portions of the previously registered securities when market conditions are favorable.",
+      "translations": {}
+    },
+    "R9Zy7ojxiHP1rElLaAVLALf": {
+      "key": "R9Zy7ojxiHP1rElLaAVLALf",
+      "uri": "https://soli.openlegalstandard.org/R9Zy7ojxiHP1rElLaAVLALf",
+      "timestamp": "20250111144219",
+      "context": [
+        {
+          "url": "https://soli.openlegalstandard.org/R9Zy7ojxiHP1rElLaAVLALf",
+          "text": "Jury Sworn In: The specific event in a trial where the jury is officially selected and sworn in to hear the case.",
+          "type": "definition",
+          "time": "20250111144219"
+        }
+      ],
+      "failed_urls": [
+        "https://soli.openlegalstandard.org/R9Zy7ojxiHP1rElLaAVLALf"
+      ],
+      "parents": [
+        "https://soli.openlegalstandard.org/Rchny3YFXoQyenv6XUbyo0"
+      ],
+      "children": [],
+      "content_urls": [],
+      "has_parent_in_kb": false,
+      "languages": [
+        "en",
+        "de-de",
+        "es-es",
+        "es-mx",
+        "en-gb",
+        "fr-fr",
+        "pt-br",
+        "he-il",
+        "hi-in",
+        "zh-cn",
+        "ja-jp"
+      ],
+      "deprecated": false,
+      "country": null,
+      "source": null,
+      "labels": {
+        "en": "Jury Sworn In"
+      },
+      "definitions": {},
+      "class_not_found": false,
+      "downloadedRefs": [],
+      "type": "class",
+      "preferred_label": null,
+      "alternative_labels": [],
+      "definition": "Jury Sworn In: The specific event in a trial where the jury is officially selected and sworn in to hear the case.",
+      "translations": {
+        "de-de": "Geschworene vereidigt",
+        "es-es": "Jurado juramentado",
+        "es-mx": "Jurado juramentado",
+        "en-gb": "Jury Sworn In",
+        "fr-fr": "Jury asserment\u00e9e",
+        "pt-br": "J\u00fari juramentado",
+        "he-il": "\u05d4\u05e9\u05d5\u05e4\u05d8\u05d9\u05dd \u05e0\u05e9\u05d1\u05e2\u05d5",
+        "hi-in": "\u091c\u094d\u092f\u0942\u0930\u0940 \u0936\u092a\u0925 \u0932\u0947\u0928\u0947 \u0915\u0947 \u092c\u093e\u0926",
+        "zh-cn": "\u966a\u5ba1\u56e2\u5ba3\u8a93\u5c31\u804c",
+        "ja-jp": "\u966a\u5be9\u54e1\u8a93\u7d04"
+      }
+    },
+    "R7lHdg31xpYxItf0jgCiwtz": {
+      "key": "R7lHdg31xpYxItf0jgCiwtz",
+      "uri": "https://soli.openlegalstandard.org/R7lHdg31xpYxItf0jgCiwtz",
+      "timestamp": "20250111144219",
+      "context": [
+        {
+          "url": "https://soli.openlegalstandard.org/R7lHdg31xpYxItf0jgCiwtz",
+          "text": "The Tai languages are a group of related languages spoken in Southeast Asia, including Thai, Lao, and Shan.",
+          "type": "definition",
+          "time": "20250111144219"
+        }
+      ],
+      "failed_urls": [
+        "https://soli.openlegalstandard.org/R7lHdg31xpYxItf0jgCiwtz"
+      ],
+      "parents": [
+        "https://soli.openlegalstandard.org/RDOvAHsvY8TKJ1O1orXPM9o"
+      ],
+      "children": [],
+      "content_urls": [],
+      "has_parent_in_kb": false,
+      "languages": [
+        "en",
+        "fr-fr",
+        "pt-br",
+        "de-de",
+        "ja-jp",
+        "zh-cn"
+      ],
+      "deprecated": false,
+      "country": null,
+      "source": null,
+      "labels": {
+        "en": "Tai languages"
+      },
+      "definitions": {},
+      "class_not_found": false,
+      "downloadedRefs": [],
+      "type": "class",
+      "preferred_label": null,
+      "alternative_labels": [],
+      "definition": "The Tai languages are a group of related languages spoken in Southeast Asia, including Thai, Lao, and Shan.",
+      "translations": {
+        "fr-fr": "Langues ta\u00ef",
+        "pt-br": "L\u00ednguas tai",
+        "de-de": "Tai-Sprachen",
+        "ja-jp": "\u30bf\u30a4\u8a9e\u65cf",
+        "zh-cn": "\u50a3\u8bed\u65cf\u8bed\u8a00"
+      }
+    },
+    "RB9ojf15IXksU2tQQIjK24X": {
+      "key": "RB9ojf15IXksU2tQQIjK24X",
+      "uri": "https://soli.openlegalstandard.org/RB9ojf15IXksU2tQQIjK24X",
+      "timestamp": "20250111144219",
+      "context": [
+        {
+          "url": "https://soli.openlegalstandard.org/RB9ojf15IXksU2tQQIjK24X",
+          "text": "A classical language of India, Sanskrit is a member of the Indo-European language family and is known for its complex grammar and rich vocabulary.",
+          "type": "definition",
+          "time": "20250111144219"
+        }
+      ],
+      "failed_urls": [
+        "https://soli.openlegalstandard.org/RB9ojf15IXksU2tQQIjK24X"
+      ],
+      "parents": [
+        "https://soli.openlegalstandard.org/RDOvAHsvY8TKJ1O1orXPM9o"
+      ],
+      "children": [],
+      "content_urls": [],
+      "has_parent_in_kb": false,
+      "languages": [
+        "en",
+        "de-de",
+        "fr-fr",
+        "pt-br",
+        "ja-jp",
+        "zh-cn"
+      ],
+      "deprecated": false,
+      "country": null,
+      "source": null,
+      "labels": {
+        "en": "Sanskrit"
+      },
+      "definitions": {},
+      "class_not_found": false,
+      "downloadedRefs": [],
+      "type": "class",
+      "preferred_label": null,
+      "alternative_labels": [],
+      "definition": "A classical language of India, Sanskrit is a member of the Indo-European language family and is known for its complex grammar and rich vocabulary.",
+      "translations": {
+        "de-de": "Sanskrit",
+        "fr-fr": "sanskrit",
+        "pt-br": "s\u00e2nscrito",
+        "ja-jp": "\u30b5\u30f3\u30b9\u30af\u30ea\u30c3\u30c8",
+        "zh-cn": "\u68b5\u8bed"
+      }
+    }
+  },
+  "refs": [],
+  "failed_urls": [
+    "https://soli.openlegalstandard.org/RB92n5NAKQsEoPaonOcrwkh",
+    "https://soli.openlegalstandard.org/RDaNIjG3Bz5mnMEssDHDHwf",
+    "https://soli.openlegalstandard.org/RCnT6mtIS5PFqLHFn37D1cS",
+    "https://soli.openlegalstandard.org/R7qfDUdV0uQYPGsrjTf3QDf",
+    "https://soli.openlegalstandard.org/RD3TwEtezlhaJxwaSHCibko",
+    "https://soli.openlegalstandard.org/R9bMbVma5UtRo0U4Nf93dF0",
+    "https://soli.openlegalstandard.org/R9kPeaR5Knf1SM893ZO1PK8",
+    "https://soli.openlegalstandard.org/RCcWasK7LnVMXipm7uQAOA2",
+    "https://soli.openlegalstandard.org/RBwUL1KJIJngnQ17RlNcpse",
+    "https://soli.openlegalstandard.org/RBIjupGmQLqpwi89uEk45qA",
+    "https://soli.openlegalstandard.org/R8dxOsfM0gsVdvh1SKyl4ub",
+    "https://soli.openlegalstandard.org/R7MXUsspwVFhBmhwbAGdnil",
+    "https://soli.openlegalstandard.org/R9v922zEDjLTzShv6ZTmRGm",
+    "https://soli.openlegalstandard.org/RBcwpjAzBR8decXxlKlehsC",
+    "https://soli.openlegalstandard.org/R9EE4MizkGCUul3HbdMg3l9",
+    "https://soli.openlegalstandard.org/RCPvkWuRYuJnVkrp50ODImF",
+    "https://soli.openlegalstandard.org/RBtZFVleTznsPmr5BJaar9c",
+    "https://soli.openlegalstandard.org/RBBmq8h5E89w78FxiAWlmHR",
+    "https://soli.openlegalstandard.org/RBbkwoH1uH2PhTq4RgSutqL",
+    "https://soli.openlegalstandard.org/RBELr11Jgeg3kZ8qb7nqfC5",
+    "https://soli.openlegalstandard.org/R9Zy7ojxiHP1rElLaAVLALf",
+    "https://soli.openlegalstandard.org/R7lHdg31xpYxItf0jgCiwtz",
+    "https://soli.openlegalstandard.org/RB9ojf15IXksU2tQQIjK24X"
+  ],
+  "downloadedRefs": []
+}
