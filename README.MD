@@ -58,12 +58,27 @@ Arguments:
 
 3. Create Dataset:
 ```bash
-python create_dataset.py --kb-path knowledge_base.json --output dataset.json
+python create_dataset.py --kb-path knowledge_base.json --output dataset.json --limit [number|all]
 ```
 Arguments:
 - `--kb-path`: Path to knowledge base JSON
 - `--output`: Path to save dataset
-- `--limit`: (Optional) Limit number of nodes to process
+- `--limit`: Number of nodes to process or 'all' for entire knowledge base
+
+The dataset creation process:
+1. Generates multiple questions for each chunk of text
+2. Validates questions for quality and uniqueness
+3. Creates instruction-response pairs for each valid question
+4. Writes entries immediately to dataset.jsonl
+
+Each dataset entry contains:
+```json
+{
+    "instruction": "Clear instruction based on question",
+    "context": "Original text chunk",
+    "response": "Direct answer based on context"
+}
+```
 
 ## Output Files
 
