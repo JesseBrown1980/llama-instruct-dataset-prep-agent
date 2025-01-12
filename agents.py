@@ -31,6 +31,20 @@ def get_machine_ip():
         s.close()
     return ip
 
+def get_wsl_ip():
+    """Get the WSL IP address"""
+    try:
+        result = subprocess.run(
+            ['wsl.exe', 'hostname', '-I'], 
+            capture_output=True, 
+            text=True
+        )
+        if result.returncode == 0:
+            return result.stdout.strip().split()[0]
+    except:
+        pass
+    return None
+
 def start_ollama(ip):
     """Start Ollama in Ubuntu-22.04 with the specified IP and ensure model is available"""
     logger.info(f"Starting Ollama in Ubuntu-22.04 on {ip}...")
@@ -72,139 +86,104 @@ def start_ollama(ip):
         return False
 
 def ensure_ollama_running():
-    """
-    Check if Ollama API is responding, if not try to start it.
-    Uses current machine's IP address and starts Ollama in Ubuntu if needed.
-    """
-    ip = get_machine_ip()
-    url = f"http://{ip}:11434/api/version"
-    
-    try:
-        # Test if Ollama is already running
-        resp = requests.get(url)
-        if resp.status_code == 200:
-            logger.info(f"Successfully connected to Ollama on {ip}")
-            return True, ip
-    except requests.exceptions.ConnectionError:
-        # Try to start Ollama
-        if start_ollama(ip):
-            return True, ip
-        else:
-            logger.error(f"Could not start Ollama. Please ensure:")
-            logger.error("1. Ubuntu-22.04 is running in WSL")
-            logger.error("2. Ollama is installed in Ubuntu-22.04")
-            logger.error(f"3. Port 11434 is available on {ip}")
-            return False, ip
-    
-    return False, ip
-
-def check_windows_ollama():
-    """Check if Ollama is running on Windows and error out if it is"""
+    """Check if Ollama is running and return the correct IP to use"""
+    # First try localhost
     try:
         resp = requests.get("http://localhost:11434/api/version")
         if resp.status_code == 200:
-            logger.error("ERROR: Ollama is running on Windows!")
-            logger.error("This application requires Ollama to run in WSL/Ubuntu.")
-            logger.error("Please:")
-            logger.error("1. Stop Ollama on Windows")
-            logger.error("2. Install and run Ollama in WSL instead")
-            logger.error("3. Run 'ollama serve' in WSL terminal")
-            raise RuntimeError("Ollama must run in WSL/Ubuntu, not Windows")
-    except requests.exceptions.ConnectionError:
-        # This is good - means Ollama is not running on Windows
+            logger.info("Successfully connected to Ollama on localhost")
+            return True, "localhost"
+    except:
         pass
 
-def ollama_invoke(prompt, model="llama3:8b", temperature=0.0, format_spec=None, agent_name="ollama_invoke", max_retries=3):
-    """
-    Invoke Ollama endpoint with prompt.
-    Will automatically start Ollama in Ubuntu if it's not running.
-    """
-    # Ensure Ollama is running and get host
-    is_running, ip = ensure_ollama_running()
-    if not is_running:
-        raise RuntimeError(f"Failed to connect to Ollama server. Please check the logs for details.")
-        
-    logger.debug(f"Invoking Ollama with model={model}, temperature={temperature}")
-    url = f"http://{ip}:11434/api/generate"
-    headers = {"Content-Type": "application/json"}
-    data = {
-        "prompt": prompt,
-        "model": model,
-        "stream": False,
-        "temperature": temperature
-    }
-    
-    if format_spec:
-        data["format"] = format_spec
-    
-    last_error = None
-    for attempt in range(max_retries):
+    # If localhost fails, try WSL
+    wsl_ip = get_wsl_ip()
+    if wsl_ip:
         try:
-            # Log request details at debug level
-            logger.debug(f"Sending request to Ollama API (attempt {attempt + 1}/{max_retries}):")
-            logger.debug(f"URL: {url}")
-            logger.debug(f"Headers: {json.dumps(headers, indent=2)}")
-            logger.debug(f"Data: {json.dumps(data, indent=2)}")
+            resp = requests.get(f"http://{wsl_ip}:11434/api/version")
+            if resp.status_code == 200:
+                logger.info(f"Successfully connected to Ollama on WSL ({wsl_ip})")
+                return True, wsl_ip
+        except:
+            pass
+
+    logger.error("Could not connect to Ollama. Please ensure:")
+    logger.error("1. Ollama is installed and running (ollama serve)")
+    logger.error("2. Port 11434 is available")
+    return False, "localhost"
+
+def ollama_invoke(prompt, model="llama3:8b", temperature=0.0, format_spec=None, agent_name="ollama_invoke", max_retries=3):
+    """Call the Ollama API with retry logic"""
+    logger.info(f"Calling Ollama API with model {model}")
+    
+    max_retries = 3
+    retry_count = 0
+    
+    while retry_count < max_retries:
+        try:
+            # Get IP address for Ollama
+            running, ip = ensure_ollama_running()
+            if not running:
+                raise Exception("Could not connect to Ollama server")
+                
+            # Make API request
+            url = f"http://{ip}:11434/api/generate"
+            headers = {"Content-Type": "application/json"}
+            data = {
+                "model": model,
+                "prompt": prompt,
+                "stream": False,  # Disable streaming for complete response
+                "temperature": temperature
+            }
             
-            resp = requests.post(url, headers=headers, json=data)
+            # Add format spec if provided
+            if format_spec:
+                data["format"] = format_spec
             
-            # If there's an error, log everything at error level
-            if resp.status_code != 200:
-                logger.error(f"Ollama API error (status {resp.status_code}):")
+            logger.info(f"Successfully connected to Ollama on {ip}")
+            
+            response = requests.post(url, headers=headers, json=data)
+            
+            if response.status_code == 404:
+                error_msg = response.json().get("error", "Unknown error")
+                logger.error(f"Ollama API error (status 404):")
                 logger.error(f"Request URL: {url}")
                 logger.error(f"Request headers: {json.dumps(headers, indent=2)}")
                 logger.error(f"Request data: {json.dumps(data, indent=2)}")
-                logger.error(f"Response headers: {dict(resp.headers)}")
-                logger.error(f"Response text: {resp.text}")
+                logger.error(f"Response headers: {dict(response.headers)}")
+                logger.error(f"Response text: {response.text}")
                 
-                if resp.status_code == 404 and "model not found" in resp.text.lower():
-                    # Try to refresh the model
-                    logger.info(f"Model {model} not found, attempting to refresh...")
-                    try:
-                        subprocess.run(["ollama", "pull", model], check=True)
-                        time.sleep(1)  # Give it a moment to load
-                        continue  # Try the request again
-                    except subprocess.CalledProcessError as e:
-                        logger.error(f"Failed to refresh model: {str(e)}")
-                
-            resp.raise_for_status()
-            response_data = resp.json()
-            
-            # Log token metrics
-            eval_count = len(prompt.split())  # Simple token count estimation
-            eval_duration_ns = int(float(response_data.get("eval_duration", 2.5)) * 1e9)
-            log_token_cost(agent_name, eval_count, eval_duration_ns)
-            
-            return response_data["response"].strip()
-            
-        except requests.exceptions.HTTPError as e:
-            last_error = e
-            if attempt == max_retries - 1:  # Last attempt
-                if e.response.status_code == 404:
-                    logger.error(f"Ollama API returned 404 - Model {model} not found or API endpoint incorrect")
+                if retry_count < max_retries - 1:
+                    retry_count += 1
+                    logger.warning(f"Request failed (attempt {retry_count}/{max_retries}), retrying...")
+                    continue
+                else:
+                    logger.error("Ollama API returned 404 - Model not found or API endpoint incorrect")
                     logger.error("Please ensure:")
                     logger.error("1. Ollama server is running (ollama serve)")
                     logger.error(f"2. Model '{model}' is available (ollama list)")
                     logger.error(f"3. API endpoint is correct ({url})")
-                raise
-            else:
-                logger.warning(f"Request failed (attempt {attempt + 1}/{max_retries}), retrying...")
-                time.sleep(1)  # Wait before retry
-                
+                    raise Exception(f"404 Client Error: Not Found for url: {url}")
+            
+            response.raise_for_status()
+            response_json = response.json()
+            
+            # Log token metrics
+            eval_count = len(prompt.split())  # Simple token count estimation
+            eval_duration_ns = int(float(response_json.get("eval_duration", 2.5)) * 1e9)
+            log_token_cost(agent_name, eval_count, eval_duration_ns)
+            
+            return response_json["response"].strip()
+            
         except Exception as e:
-            last_error = e
-            if attempt == max_retries - 1:  # Last attempt
-                logger.error(f"Unexpected error calling Ollama API: {str(e)}")
-                logger.error("Request details:")
-                logger.error(f"URL: {url}")
-                logger.error(f"Headers: {json.dumps(headers, indent=2)}")
-                logger.error(f"Data: {json.dumps(data, indent=2)}")
-                raise
+            if retry_count < max_retries - 1:
+                retry_count += 1
+                logger.warning(f"Request failed (attempt {retry_count}/{max_retries}), retrying...")
+                continue
             else:
-                logger.warning(f"Request failed (attempt {attempt + 1}/{max_retries}), retrying...")
-                time.sleep(1)  # Wait before retry
-    
-    raise last_error  # Should never get here, but just in case
+                raise e
+
+    raise Exception("Max retries exceeded")
 
 def log_token_cost(agent_name, eval_count, eval_duration_ns):
     """Log token cost metrics to token_cost.json"""
@@ -326,3 +305,19 @@ Return corrected JSON if needed. No other text.
 """
     return ollama_invoke(prompt, model="llama3:8b", temperature=0.0, 
                         format_spec="json", agent_name="checker_agent")
+
+def check_windows_ollama():
+    """Check if Ollama is running on Windows and error out if it is"""
+    try:
+        resp = requests.get("http://localhost:11434/api/version")
+        if resp.status_code == 200:
+            logger.error("ERROR: Ollama is running on Windows!")
+            logger.error("This application requires Ollama to run in WSL/Ubuntu.")
+            logger.error("Please:")
+            logger.error("1. Stop Ollama on Windows")
+            logger.error("2. Install and run Ollama in WSL instead")
+            logger.error("3. Run 'ollama serve' in WSL terminal")
+            raise RuntimeError("Ollama must run in WSL/Ubuntu, not Windows")
+    except requests.exceptions.ConnectionError:
+        # This is good - means Ollama is not running on Windows
+        pass
