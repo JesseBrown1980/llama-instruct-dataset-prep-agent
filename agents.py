@@ -19,6 +19,9 @@ _token_cost = {
     "tasks": {}
 }
 
+# Semaphore to limit concurrent Ollama requests
+OLLAMA_SEMAPHORE = threading.Semaphore(1)  # Only allow 1 request at a time
+
 def get_machine_ip():
     """Get the current machine's IP address"""
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -113,58 +116,25 @@ def ensure_ollama_running():
     logger.error("2. Port 11434 is available")
     return False, "localhost"
 
-def ollama_invoke(prompt, model="llama3:8b", temperature=0.0, format_spec=None, agent_name="ollama_invoke", max_retries=3):
-    """Call the Ollama API with retry logic"""
-    logger.info(f"\n=== {agent_name} Input ===\n{prompt}\n=== End Input ===")
-    
-    max_retries = 3
+def ollama_invoke(prompt, model="llama2", temperature=0.8, format_spec="text", agent_name="unknown", max_retries=3):
+    """
+    Synchronously invoke Ollama API and wait for response.
+    Returns only after request is complete.
+    """
+    url = "http://localhost:11434/api/generate"
+    headers = {"Content-Type": "application/json"}
+    data = {
+        "model": model,
+        "prompt": prompt,
+        "stream": False,  # Ensure we wait for complete response
+        "temperature": temperature
+    }
+
     retry_count = 0
-    
     while retry_count < max_retries:
         try:
-            # Get IP address for Ollama
-            running, ip = ensure_ollama_running()
-            if not running:
-                raise Exception("Could not connect to Ollama server")
-                
-            # Make API request
-            url = f"http://{ip}:11434/api/generate"
-            headers = {"Content-Type": "application/json"}
-            data = {
-                "model": model,
-                "prompt": prompt,
-                "stream": False,  # Disable streaming for complete response
-                "temperature": temperature
-            }
-            
-            # Add format spec if provided
-            if format_spec:
-                data["format"] = format_spec
-            
-            logger.info(f"Successfully connected to Ollama on {ip}")
-            
+            logger.info(f"Making Ollama request for {agent_name}")
             response = requests.post(url, headers=headers, json=data)
-            
-            if response.status_code == 404:
-                error_msg = response.json().get("error", "Unknown error")
-                logger.error(f"Ollama API error (status 404):")
-                logger.error(f"Request URL: {url}")
-                logger.error(f"Request headers: {json.dumps(headers, indent=2)}")
-                logger.error(f"Request data: {json.dumps(data, indent=2)}")
-                logger.error(f"Response headers: {dict(response.headers)}")
-                logger.error(f"Response text: {response.text}")
-                
-                if retry_count < max_retries - 1:
-                    retry_count += 1
-                    logger.warning(f"Request failed (attempt {retry_count}/{max_retries}), retrying...")
-                    continue
-                else:
-                    logger.error("Ollama API returned 404 - Model not found or API endpoint incorrect")
-                    logger.error("Please ensure:")
-                    logger.error("1. Ollama server is running (ollama serve)")
-                    logger.error(f"2. Model '{model}' is available (ollama list)")
-                    logger.error(f"3. API endpoint is correct ({url})")
-                    raise Exception(f"404 Client Error: Not Found for url: {url}")
             
             if response.status_code == 500:
                 retry_count += 1
@@ -174,25 +144,39 @@ def ollama_invoke(prompt, model="llama3:8b", temperature=0.0, format_spec=None, 
                 continue
                 
             response.raise_for_status()
-            response_json = response.json()
+            result = response.json()
             
-            # Log token metrics
-            eval_count = len(prompt.split())  # Simple token count estimation
-            eval_duration_ns = int(float(response_json.get("eval_duration", 2.5)) * 1e9)
-            log_token_cost(agent_name, eval_count, eval_duration_ns)
+            # Ensure we have a complete response
+            if 'response' not in result:
+                raise Exception("Incomplete response from Ollama")
             
-            logger.info(f"\n=== {agent_name} Output ===\n{response_json['response']}\n=== End Output ===")
-            return response_json["response"].strip()
+            if format_spec == "json":
+                try:
+                    text = result['response']
+                    # Find JSON-like content
+                    start = text.find('[')
+                    end = text.rfind(']') + 1
+                    if start >= 0 and end > start:
+                        json_str = text[start:end]
+                        # Validate JSON before returning
+                        json.loads(json_str)  # This will raise if invalid
+                        logger.info(f"Successfully completed {agent_name} request")
+                        return json_str
+                    return text
+                except Exception as e:
+                    logger.error(f"JSON extraction failed: {str(e)}")
+                    raise
+            
+            logger.info(f"Successfully completed {agent_name} request")
+            return result['response']
             
         except Exception as e:
-            if retry_count < max_retries - 1:
-                retry_count += 1
-                logger.warning(f"Request failed (attempt {retry_count}/{max_retries}), retrying...")
-                continue
-            else:
-                raise e
-
-    raise Exception("Max retries exceeded")
+            retry_count += 1
+            if retry_count == max_retries:
+                logger.error(f"Failed to complete Ollama request: {str(e)}")
+                raise
+            logger.warning(f"Retrying request (attempt {retry_count}/{max_retries})")
+            continue
 
 def log_token_cost(agent_name, eval_count, eval_duration_ns):
     """Log token cost metrics to token_cost.json"""

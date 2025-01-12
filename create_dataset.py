@@ -83,39 +83,51 @@ class DatasetCreator:
             f.write(json.dumps(chunk) + '\n')
             f.flush()
         
-        # Generate and write questions
+        # Generate questions - wait for completion
+        logger.info(f"Generating questions for chunk {chunk_id}")
         questions_json = questioner_agent_invoke(context_chunk)
         questions = json.loads(questions_json)
         
-        # Write raw questions first
+        # Write raw questions
         with open(self.questions_file, 'a', encoding='utf-8') as f:
             for q in questions:
                 question = {"chunk_id": chunk_id, "node_key": node_key, "question": q}
                 f.write(json.dumps(question) + '\n')
                 f.flush()
         
-        # Then validate and process for dataset
+        # Validate questions - wait for completion
+        logger.info(f"Validating questions for chunk {chunk_id}")
         cleaned_questions_json = question_checker_agent_invoke(json.dumps(questions))
         cleaned_questions = json.loads(cleaned_questions_json)
         
-        # Process each validated question
+        # Process each validated question sequentially
         with open(self.dataset_file, 'a', encoding='utf-8') as f:
             for question in cleaned_questions:
                 try:
+                    # Generate instruction - wait for completion
+                    logger.info(f"Generating instruction for question: {question}")
                     instruction = make_instruction_agent(question, context_chunk)
+                    
+                    # Generate answer - wait for completion
+                    logger.info(f"Generating answer")
                     answer = maker_agent(question, context_chunk)
                     
+                    # Create entry
                     entry = {
                         "instruction": instruction.strip(),
                         "context": context_chunk.strip(),
                         "response": answer.strip()
                     }
                     
+                    # Validate entry - wait for completion
+                    logger.info(f"Validating entry")
                     validated = json.loads(checker_agent(json.dumps(entry)))
+                    
                     if all(k in validated for k in ['instruction', 'context', 'response']):
                         f.write(json.dumps(validated) + '\n')
                         f.flush()
-                
+                        logger.info(f"Successfully processed question and wrote entry")
+                    
                 except Exception as e:
                     logger.error(f"Failed to process question: {str(e)}")
                     continue
