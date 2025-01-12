@@ -95,3 +95,7 @@ git clone https://github.com/yourusername/llama-instruct-dataset-prep-agent.git
 cd llama-instruct-dataset-prep-agent
 
 failed_downloads.txt
+
+/data
+class_counter.txt
+token_cost.json
