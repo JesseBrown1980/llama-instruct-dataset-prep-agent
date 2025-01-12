@@ -48,10 +48,8 @@ def chunk_text(text: str, max_words: int = 2000) -> List[str]:
     return chunks
 
 class DatasetCreator:
-    def __init__(self, knowledge_base_path: str, output_path: str):
-        self.knowledge_base_path = knowledge_base_path
+    def __init__(self, output_path: str):
         self.output_path = output_path
-        self.knowledge_base = self._load_knowledge_base()
         
         # Initialize data files
         self.data_dir = os.path.join(os.path.dirname(output_path), 'data')
@@ -65,14 +63,6 @@ class DatasetCreator:
         open(self.chunks_file, 'w').close()
         open(self.questions_file, 'w').close()
         open(self.dataset_file, 'w').close()
-
-    def _load_knowledge_base(self) -> Dict:
-        """Load and validate the knowledge base file."""
-        with open(self.knowledge_base_path, 'r', encoding='utf-8') as f:
-            kb = json.load(f)
-        if not isinstance(kb, dict) or 'nodes' not in kb:
-            raise ValueError("Invalid knowledge base format")
-        return kb
 
     def process_chunk(self, context_chunk: str, node_key: str, chunk_index: int) -> None:
         """Process a single context chunk to generate questions and answers."""
@@ -157,24 +147,36 @@ class DatasetCreator:
         for i, chunk in enumerate(chunks, 1):
             self.process_chunk(chunk, node_key, i)
 
-    def create_dataset(self, limit: Optional[int] = None) -> None:
-        """Create the dataset by processing nodes from the knowledge base."""
-        nodes = list(self.knowledge_base['nodes'].values())
-        if limit:
-            nodes = nodes[:limit]
-        
-        for node in nodes:
-            self.process_node(node)
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--kb-path', required=True, help='Path to knowledge base JSON file')
+    parser.add_argument('--output', required=True, help='Path to output dataset file')
+    parser.add_argument('--limit', type=str, default=None, 
+                      help='Limit number of nodes to process. Use "all" for no limit or a number')
+    return parser.parse_args()
 
 def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--kb-path', required=True, help='Knowledge base JSON file')
-    parser.add_argument('--output', required=True, help='Output dataset path')
-    parser.add_argument('--limit', type=int, help='Limit nodes to process')
-    args = parser.parse_args()
+    args = parse_args()
     
-    creator = DatasetCreator(args.kb_path, args.output)
-    creator.create_dataset(limit=args.limit)
+    # Load knowledge base
+    with open(args.kb_path, 'r', encoding='utf-8') as f:
+        kb = json.load(f)
+        
+    # Create dataset
+    creator = DatasetCreator(args.output)
+    
+    # Process nodes
+    nodes = list(kb['nodes'].items())
+    if args.limit and args.limit.lower() != 'all':
+        try:
+            limit = int(args.limit)
+            nodes = nodes[:limit]
+        except ValueError:
+            logger.error(f"Invalid limit value: {args.limit}. Use 'all' or a number.")
+            return
+            
+    for node_key, node in nodes:
+        creator.process_node(node)
 
 if __name__ == "__main__":
     main()
