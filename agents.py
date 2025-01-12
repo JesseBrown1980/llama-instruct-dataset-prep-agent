@@ -42,15 +42,8 @@ def start_ollama(ip):
             stderr=subprocess.PIPE
         )
         
-        # Shutdown WSL to clean up any lingering processes
-        subprocess.run(
-            ['wsl.exe', '--shutdown'],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE
-        )
-        
-        # Wait a moment for WSL to fully shutdown
-        time.sleep(2)
+        # Wait a moment for process cleanup
+        time.sleep(1)
         
         # Run ollama serve in Ubuntu-22.04 with public IP
         subprocess.Popen(
