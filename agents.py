@@ -19,8 +19,6 @@ _token_cost = {
     "tasks": {}
 }
 
-# Semaphore to limit concurrent Ollama requests
-OLLAMA_SEMAPHORE = threading.Semaphore(1)  # Only allow 1 request at a time
 
 def get_machine_ip():
     """Get the current machine's IP address"""
