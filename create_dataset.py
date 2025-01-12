@@ -11,7 +11,8 @@ from agents import (
     formatter_agent,
     checker_agent,
     cleaner_agent,
-    make_instruction_agent
+    make_instruction_agent,
+    create_dataset_entry
 )
 
 # Configure logging
@@ -75,62 +76,62 @@ class DatasetCreator:
 
     def process_chunk(self, context_chunk: str, node_key: str, chunk_index: int) -> None:
         """Process a single context chunk to generate questions and answers."""
-        chunk_id = f"{node_key}_chunk_{chunk_index}"
-        
-        # Write chunk
-        with open(self.chunks_file, 'a', encoding='utf-8') as f:
-            chunk = {"chunk_id": chunk_id, "node_key": node_key, "content": context_chunk}
-            f.write(json.dumps(chunk) + '\n')
-            f.flush()
-        
         # Generate questions - wait for completion
-        logger.info(f"Generating questions for chunk {chunk_id}")
+        logger.info(f"Generating questions")
         questions_json = questioner_agent_invoke(context_chunk)
         questions = json.loads(questions_json)
         
+        if not questions:
+            logger.warning(f"No questions generated")
+            return
+            
         # Write raw questions
+        questions_jsonl = ""
         with open(self.questions_file, 'a', encoding='utf-8') as f:
             for q in questions:
-                question = {"chunk_id": chunk_id, "node_key": node_key, "question": q}
-                f.write(json.dumps(question) + '\n')
+                question = {"question": q}
+                question_json = json.dumps(question)
+                f.write(question_json + '\n')
                 f.flush()
+                questions_jsonl += question_json + '\n'
         
         # Validate questions - wait for completion
-        logger.info(f"Validating questions for chunk {chunk_id}")
-        cleaned_questions_json = question_checker_agent_invoke(json.dumps(questions))
+        logger.info(f"Validating questions")
+        cleaned_questions_json = question_checker_agent_invoke(questions_jsonl)
         cleaned_questions = json.loads(cleaned_questions_json)
         
-        # Process each validated question sequentially
-        with open(self.dataset_file, 'a', encoding='utf-8') as f:
-            for question in cleaned_questions:
-                try:
-                    # Generate instruction - wait for completion
-                    logger.info(f"Generating instruction for question: {question}")
-                    instruction = make_instruction_agent(question, context_chunk)
-                    
-                    # Generate answer - wait for completion
-                    logger.info(f"Generating answer")
-                    answer = maker_agent(question, context_chunk)
-                    
-                    # Create entry
-                    entry = {
-                        "instruction": instruction.strip(),
-                        "context": context_chunk.strip(),
-                        "response": answer.strip()
-                    }
-                    
-                    # Validate entry - wait for completion
-                    logger.info(f"Validating entry")
-                    validated = json.loads(checker_agent(json.dumps(entry)))
-                    
-                    if all(k in validated for k in ['instruction', 'context', 'response']):
-                        f.write(json.dumps(validated) + '\n')
-                        f.flush()
-                        logger.info(f"Successfully processed question and wrote entry")
-                    
-                except Exception as e:
-                    logger.error(f"Failed to process question: {str(e)}")
-                    continue
+        if not cleaned_questions:
+            logger.warning(f"No questions passed validation")
+            return
+            
+        # Process each validated question and write immediately
+        logger.info(f"Processing {len(cleaned_questions)} validated questions")
+        successful_entries = 0
+        
+        for question in cleaned_questions:
+            # Generate instruction with higher temperature for creativity
+            logger.info(f"Generating instruction for question: {question}")
+            instruction = make_instruction_agent(question, context_chunk)
+                
+            # Generate response with lower temperature for accuracy
+            logger.info(f"Generating response")
+            response = maker_agent(question, context_chunk)
+            
+            # Create entry - both instruction and response are guaranteed by retry logic
+            entry = {
+                "instruction": instruction.strip(),
+                "context": context_chunk.strip(),
+                "response": response.strip()
+            }
+            
+            # Write immediately
+            with open(self.dataset_file, 'a', encoding='utf-8') as f:
+                f.write(json.dumps(entry) + '\n')
+                f.flush()
+            successful_entries += 1
+            logger.info(f"Successfully wrote entry {successful_entries} for question: {question}")
+                
+        logger.info(f"Completed processing - wrote {successful_entries}/{len(cleaned_questions)} entries")
 
     def process_node(self, node: Dict) -> None:
         """Process a single node by generating questions from each chunk."""

@@ -356,7 +356,7 @@ def process_chunk_with_retry(chunk, max_retries=3):
             logger.warning(f"Retry {retry_count}/{max_retries} for chunk processing")
             # Immediate retry, no wait
 
-def question_checker_agent_invoke(questions_jsonl):
+def question_checker_agent_invoke(questions_jsonl: str) -> str:
     """
     Check a list of questions for quality and redundancy.
     Input is JSONL format with questions. Returns a cleaned JSON array of questions.
@@ -371,22 +371,33 @@ def question_checker_agent_invoke(questions_jsonl):
                     questions.append(q_obj['question'])
     except Exception as e:
         logger.error(f"Failed to parse questions JSONL: {str(e)}")
+        logger.error(f"Input JSONL: {questions_jsonl}")
         return "[]"
 
-    prompt = f"""You are a question checker agent. Review these questions and return ONLY a JSON array of the good questions.
-Remove any questions that are:
-- Redundant or too similar to other questions
-- Not specific enough
-- Not answerable from the context
-- Poorly formatted
+    if not questions:
+        logger.error("No questions found in JSONL input")
+        return "[]"
 
-Input questions:
+    logger.info(f"Checking {len(questions)} questions")
+    prompt = f"""You are a question checker agent. Return ALL questions that are not completely invalid.
+Keep ALL questions unless they are:
+1. Not actually questions (statements, fragments, etc.)
+2. Completely nonsensical or unrelated to context
+3. Exact duplicates of other questions
+
+Even if a question is:
+- Similar to another (but not exact duplicate)
+- Basic or simple
+- Could be worded better
+STILL KEEP IT - we will improve it later.
+
+Here are the questions to check:
 {json.dumps(questions, indent=2)}
 
-Return ONLY a JSON array like this:
-["Question 1", "Question 2", "Question 3"]
+Return ONLY a JSON array of the valid questions, like this:
+["Question 1", "Question 2"]
 
-DO NOT include any other text, only the JSON array."""
+DO NOT explain or add any other text. ONLY return the JSON array."""
 
     result = ollama_invoke(prompt, model="llama3:8b", temperature=0.0,
                         format_spec="json", agent_name="question_checker_agent")
@@ -396,25 +407,92 @@ DO NOT include any other text, only the JSON array."""
         cleaned_questions = json.loads(result)
         if not isinstance(cleaned_questions, list):
             logger.error(f"Question checker returned non-array JSON: {result}")
-            return "[]"
+            return json.dumps(questions)  # Return original questions
+        
+        if not cleaned_questions:
+            logger.warning("Question checker returned empty array")
+            return json.dumps(questions)  # Return original questions
+            
+        logger.info(f"Kept {len(cleaned_questions)} questions after checking")
         return json.dumps(cleaned_questions)
     except Exception as e:
         logger.error(f"Failed to parse question checker output: {str(e)}")
         logger.error(f"Raw output: {result}")
-        return "[]"
+        return json.dumps(questions)  # Return original questions
 
-def maker_agent(question, knowledge_context):
+def maker_agent(question: str, context: str, max_retries: int = 3) -> str:
     """
     Produces a concise answer based on knowledge_context for a single question.
+    Lower temperature (0.2) for more accurate, context-focused responses.
+    Will retry up to max_retries times if generation fails.
     """
-    prompt = f"""
-You are a maker agent. Answer this question using only this knowledge:
-{knowledge_context}
-Question:
-{question}
-No pleasantries.
+    for attempt in range(max_retries):
+        try:
+            prompt = f"""Answer this question based ONLY on the provided context.
+Be direct, specific, and comprehensive.
+
+Context: {context}
+
+Question: {question}
+
+Return ONLY your answer, no other text."""
+
+            answer = ollama_invoke(prompt, model="llama3:8b", temperature=0.2 + (attempt * 0.1),
+                              format_spec="text", agent_name="answer_maker")
+            result = answer.strip().strip('"')
+            if result:
+                return result
+                
+            logger.warning(f"Empty response generated on attempt {attempt + 1}/{max_retries}")
+        except Exception as e:
+            logger.warning(f"Response generation failed on attempt {attempt + 1}/{max_retries}: {str(e)}")
+            
+    # If all retries failed, extract relevant info from context
+    context_words = context.split()
+    question_words = set(question.lower().split())
+    relevant_parts = []
+    
+    for i in range(len(context_words)):
+        window = ' '.join(context_words[max(0, i-5):min(len(context_words), i+6)])
+        if any(word in window.lower() for word in question_words):
+            relevant_parts.append(window)
+            
+    if relevant_parts:
+        return ' '.join(relevant_parts)
+    else:
+        return "Based on the provided context, a specific answer could not be generated."
+
+def make_instruction_agent(question: str, context: str, max_retries: int = 3) -> str:
+    """
+    Converts a question into a clear instruction for the model.
+    Higher temperature (0.7) for more creative instruction generation.
+    Will retry up to max_retries times if generation fails.
+    """
+    for attempt in range(max_retries):
+        try:
+            prompt = f"""Convert this question into a clear instruction for an AI model.
+The instruction should be direct, specific, and focused on the task.
+
+Context: {context}
+
+Question: {question}
+
+Return ONLY the instruction text, no other text or formatting.
+Example output: "Explain the specific role and responsibilities of X in context Y"
 """
-    return ollama_invoke(prompt, model="llama3:8b", temperature=0.2, agent_name="maker_agent")
+            
+            instruction = ollama_invoke(prompt, model="llama3:8b", temperature=0.7 - (attempt * 0.2),
+                                    format_spec="text", agent_name="instruction_maker")
+            result = instruction.strip().strip('"')
+            if result:
+                return result
+            
+            logger.warning(f"Empty instruction generated on attempt {attempt + 1}/{max_retries}")
+        except Exception as e:
+            logger.warning(f"Instruction generation failed on attempt {attempt + 1}/{max_retries}: {str(e)}")
+            
+    # If all retries failed, return a basic instruction based on the question
+    return f"Based on the provided context, {question.strip('?')}?"
 
 def formatter_agent(raw_answer, question, context):
     """
@@ -444,33 +522,93 @@ def json_validator_agent(json_str: str) -> str:
     Validates and ensures the input is proper JSON format.
     Returns cleaned JSON string or raises error.
     """
-    prompt = f"""
-You are a JSON validator. Ensure this is valid JSON with instruction/context/response fields.
-If not valid, fix it. Return ONLY the valid JSON, no other text:
-{json_str}
-
-Requirements:
-1. Must be valid JSON
-2. Must have instruction, context, response fields
-3. No other fields allowed
-4. No metadata or extra info
-5. Return ONLY the JSON
-"""
-    return ollama_invoke(prompt, model="llama3:8b", temperature=0.0,
-                        format_spec="json", agent_name="json_validator_agent")
+    try:
+        # First try to parse it
+        data = json.loads(json_str)
+        
+        # Check required fields
+        if not all(k in data for k in ['instruction', 'context', 'response']):
+            logger.error("Missing required fields in JSON")
+            raise ValueError("JSON missing required fields")
+            
+        # Clean any extra whitespace/quotes
+        data['instruction'] = data['instruction'].strip().strip('"')
+        data['context'] = data['context'].strip().strip('"')
+        data['response'] = data['response'].strip().strip('"')
+        
+        # Preserve metadata if present
+        if 'metadata' in data:
+            data['metadata'] = {
+                k: v.strip().strip('"') if isinstance(v, str) else v 
+                for k, v in data['metadata'].items()
+            }
+            
+        return json.dumps(data)
+    except Exception as e:
+        logger.error(f"JSON validation failed: {str(e)}")
+        logger.error(f"Input JSON: {json_str}")
+        raise
 
 def checker_agent(draft_json: str) -> str:
     """
     Checks logical consistency of the final Dolly JSON and returns valid JSON if needed.
     """
-    prompt = f"""
-You are a checker agent. Check this JSON for logical consistency such that the data is in strict json, the responses have no pleasantries and are completely concise and the response is valid for the given instruction and context. If anything does not match up, fix it and return strict json only:
+    prompt = f"""You are a JSON validator. Check this Dolly-format entry and return ONLY the validated JSON.
+If valid, return the exact same JSON. If invalid, fix any issues and return the fixed JSON.
+
+Input JSON to validate:
 {draft_json}
-Return corrected JSON if needed. No other text.
-"""
-    response = ollama_invoke(prompt, model="llama3:8b", temperature=0.0, 
-                         format_spec="json", agent_name="checker_agent")
-    return json_validator_agent(response)
+
+Requirements:
+1. Must have instruction, context, and response fields
+2. All text fields must be properly escaped
+3. Must be valid JSON format
+
+Return ONLY the JSON object. No other text or explanations."""
+
+    return ollama_invoke(prompt, model="llama3:8b", temperature=0.0,
+                      format_spec="text", agent_name="checker_agent")
+
+def create_dataset_entry(question: str, context: str) -> str:
+    """
+    Creates and validates a dataset entry from a question and context.
+    Returns the JSON string for the entry.
+    """
+    prompt = f"""Create an instruction-response pair for this question and context.
+Return ONLY a JSON object with 'instruction', 'context', and 'response' fields.
+
+Context: {context}
+Question: {question}
+
+The instruction should be clear and direct.
+The response should be comprehensive but concise.
+
+Return ONLY the JSON object like this:
+{{"instruction": "Clear instruction based on question", 
+  "context": "The given context",
+  "response": "Direct answer to instruction"}}"""
+
+    result = ollama_invoke(prompt, model="llama3:8b", temperature=0.2,
+                        format_spec="text", agent_name="entry_creator")
+                        
+    try:
+        # Validate JSON
+        entry = json.loads(result)
+        if not all(k in entry for k in ['instruction', 'context', 'response']):
+            raise ValueError("Missing required fields")
+            
+        # Clean any quotes/whitespace
+        entry = {
+            "instruction": entry['instruction'].strip().strip('"'),
+            "context": entry['context'].strip().strip('"'),
+            "response": entry['response'].strip().strip('"')
+        }
+        
+        return json.dumps(entry)
+    except Exception as e:
+        logger.error(f"Failed to create entry: {str(e)}")
+        logger.error(f"Raw output: {result}")
+        raise
 
 def check_windows_ollama():
     """Check if Ollama is running on Windows and error out if it is"""
@@ -487,24 +625,3 @@ def check_windows_ollama():
     except requests.exceptions.ConnectionError:
         # This is good - means Ollama is not running on Windows
         pass
-
-def make_instruction_agent(question: str, context: str) -> str:
-    """
-    Converts a question into a clear instruction for the model.
-    Returns only the instruction text, no JSON formatting.
-    """
-    prompt = f"""
-You are an instruction creator. Convert this question into a clear instruction. A sample instruction is: Define what X means in the context of Y , What should you do for X in the context of Y:
-Context: {context}
-Question: {question}
-
-Requirements:
-1. Return ONLY the instruction text
-2. Make it clear and actionable
-3. No JSON formatting
-4. No prefixes like 'Task:' or 'Instruction:'
-5. No quotes or special characters
-6. Must be relevant to the context
-"""
-    return ollama_invoke(prompt, model="llama3:8b", temperature=0.1, 
-                        agent_name="make_instruction_agent")
