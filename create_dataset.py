@@ -147,6 +147,28 @@ class DatasetCreator:
         for i, chunk in enumerate(chunks, 1):
             self.process_chunk(chunk, node_key, i)
 
+def create_dataset(kb_path: str, output: str, limit: str = None):
+    """Create dataset from knowledge base."""
+    # Load knowledge base
+    with open(kb_path, 'r', encoding='utf-8') as f:
+        kb = json.load(f)
+        
+    # Create dataset
+    creator = DatasetCreator(output)
+    
+    # Process nodes
+    nodes = list(kb['nodes'].items())
+    if limit and limit.lower() != 'all':
+        try:
+            limit_num = int(limit)
+            nodes = nodes[:limit_num]
+        except ValueError:
+            logger.error(f"Invalid limit value: {limit}. Use 'all' or a number.")
+            return
+            
+    for node_key, node in nodes:
+        creator.process_node(node)
+
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--kb-path', required=True, help='Path to knowledge base JSON file')
@@ -157,26 +179,7 @@ def parse_args():
 
 def main():
     args = parse_args()
-    
-    # Load knowledge base
-    with open(args.kb_path, 'r', encoding='utf-8') as f:
-        kb = json.load(f)
-        
-    # Create dataset
-    creator = DatasetCreator(args.output)
-    
-    # Process nodes
-    nodes = list(kb['nodes'].items())
-    if args.limit and args.limit.lower() != 'all':
-        try:
-            limit = int(args.limit)
-            nodes = nodes[:limit]
-        except ValueError:
-            logger.error(f"Invalid limit value: {args.limit}. Use 'all' or a number.")
-            return
-            
-    for node_key, node in nodes:
-        creator.process_node(node)
+    create_dataset(args.kb_path, args.output, args.limit)
 
 if __name__ == "__main__":
     main()
