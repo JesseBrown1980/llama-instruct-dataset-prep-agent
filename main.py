@@ -18,11 +18,10 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 class PipelineThread(threading.Thread):
-    def __init__(self, target, name, *args, **kwargs):
+    def __init__(self, target, name, **kwargs):
         super().__init__()
         self.target = target
         self.name = name
-        self.args = args
         self.kwargs = kwargs
         self.result = None
         self.error = None
@@ -30,7 +29,7 @@ class PipelineThread(threading.Thread):
     def run(self):
         try:
             logger.info(f"Starting {self.name}")
-            self.result = self.target(*self.args, **self.kwargs)
+            self.result = self.target(**self.kwargs)
             logger.info(f"Completed {self.name}")
         except Exception as e:
             self.error = e
@@ -62,11 +61,9 @@ def main():
     build_thread = PipelineThread(
         target=build_knowledge_base,
         name="Knowledge Base Creation",
-        kwargs={
-            "owl_input": args.owl_input,
-            "output": args.kb_output,
-            "limit": args.kb_limit
-        }
+        owl_input=args.owl_input,
+        output=args.kb_output,
+        limit=args.kb_limit
     )
     build_thread.start()
     build_thread.join()  # Wait for knowledge base creation to complete
@@ -85,11 +82,9 @@ def main():
     dataset_thread = PipelineThread(
         target=create_dataset,
         name="Dataset Creation",
-        kwargs={
-            "kb_path": args.kb_output,
-            "output": args.dataset_output,
-            "limit": args.dataset_limit
-        }
+        kb_path=args.kb_output,
+        output=args.dataset_output,
+        limit=args.dataset_limit
     )
     dataset_thread.start()
     dataset_thread.join()  # Wait for dataset creation to complete
