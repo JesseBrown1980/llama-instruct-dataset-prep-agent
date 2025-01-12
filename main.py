@@ -51,7 +51,10 @@ def main():
     parser.add_argument('--owl-input', type=str, required=True, help='Path to input OWL file')
     parser.add_argument('--kb-output', type=str, required=True, help='Path to knowledge base output JSON file')
     parser.add_argument('--dataset-output', type=str, required=True, help='Path to final dataset output file')
-    parser.add_argument('--limit', type=str, default="all", help='Number of classes and properties to process or \'all\' for no limit')
+    parser.add_argument('--kb-limit', type=str, default="all", 
+                      help='Number of classes/properties to process for knowledge base or "all"')
+    parser.add_argument('--dataset-limit', type=str, default="all",
+                      help='Number of nodes to process for dataset creation or "all"')
     args = parser.parse_args()
 
     # Step 1: Build Knowledge Base
@@ -63,7 +66,7 @@ def main():
         kwargs={
             "owl_input": args.owl_input,
             "output": args.kb_output,
-            "limit": args.limit
+            "limit": args.kb_limit
         }
     )
     build_thread.start()
@@ -83,7 +86,11 @@ def main():
     dataset_thread = PipelineThread(
         target=create_dataset,
         name="Dataset Creation",
-        args=[args.kb_output, args.dataset_output]
+        kwargs={
+            "kb_path": args.kb_output,
+            "output": args.dataset_output,
+            "limit": args.dataset_limit
+        }
     )
     dataset_thread.start()
     dataset_thread.join()  # Wait for dataset creation to complete
