@@ -148,30 +148,38 @@ def ollama_invoke(prompt, model="llama2", temperature=0.8, format_spec="text", a
             if 'response' not in result:
                 raise Exception("Incomplete response from Ollama")
             
+            text = result['response'].strip()
+            
             if format_spec == "json":
                 try:
-                    text = result['response']
-                    # Find JSON-like content
+                    # Find the first [ and last ]
                     start = text.find('[')
                     end = text.rfind(']') + 1
+                    
                     if start >= 0 and end > start:
                         json_str = text[start:end]
                         # Validate JSON before returning
                         json.loads(json_str)  # This will raise if invalid
                         logger.info(f"Successfully completed {agent_name} request")
                         return json_str
-                    return text
+                        
+                    logger.error(f"No JSON array found in response: {text}")
+                    return "[]"  # Return empty array as fallback
+                    
                 except Exception as e:
                     logger.error(f"JSON extraction failed: {str(e)}")
-                    raise
+                    logger.error(f"Raw response: {text}")
+                    return "[]"  # Return empty array as fallback
             
             logger.info(f"Successfully completed {agent_name} request")
-            return result['response']
+            return text
             
         except Exception as e:
             retry_count += 1
             if retry_count == max_retries:
                 logger.error(f"Failed to complete Ollama request: {str(e)}")
+                if format_spec == "json":
+                    return "[]"  # Return empty array as fallback
                 raise
             logger.warning(f"Retrying request (attempt {retry_count}/{max_retries})")
             continue
@@ -348,19 +356,52 @@ def process_chunk_with_retry(chunk, max_retries=3):
             logger.warning(f"Retry {retry_count}/{max_retries} for chunk processing")
             # Immediate retry, no wait
 
-def question_checker_agent_invoke(question_list_json):
+def question_checker_agent_invoke(questions_jsonl):
     """
-    Checks a JSON array of questions for redundancy or errors.
-    Returns corrected JSON array if needed. No pleasantries.
+    Check a list of questions for quality and redundancy.
+    Input is JSONL format with questions. Returns a cleaned JSON array of questions.
     """
-    prompt = f"""
-You are a question checker agent. Check these questions for redundancy or errors.
-Questions:
-{question_list_json}
+    # Extract just the questions from JSONL
+    questions = []
+    try:
+        for line in questions_jsonl.split('\n'):
+            if line.strip():
+                q_obj = json.loads(line)
+                if 'question' in q_obj:
+                    questions.append(q_obj['question'])
+    except Exception as e:
+        logger.error(f"Failed to parse questions JSONL: {str(e)}")
+        return "[]"
 
-"""
-    return ollama_invoke(prompt, model="llama3:8b", temperature=0.0, 
+    prompt = f"""You are a question checker agent. Review these questions and return ONLY a JSON array of the good questions.
+Remove any questions that are:
+- Redundant or too similar to other questions
+- Not specific enough
+- Not answerable from the context
+- Poorly formatted
+
+Input questions:
+{json.dumps(questions, indent=2)}
+
+Return ONLY a JSON array like this:
+["Question 1", "Question 2", "Question 3"]
+
+DO NOT include any other text, only the JSON array."""
+
+    result = ollama_invoke(prompt, model="llama3:8b", temperature=0.0,
                         format_spec="json", agent_name="question_checker_agent")
+    
+    # Ensure we have valid JSON array
+    try:
+        cleaned_questions = json.loads(result)
+        if not isinstance(cleaned_questions, list):
+            logger.error(f"Question checker returned non-array JSON: {result}")
+            return "[]"
+        return json.dumps(cleaned_questions)
+    except Exception as e:
+        logger.error(f"Failed to parse question checker output: {str(e)}")
+        logger.error(f"Raw output: {result}")
+        return "[]"
 
 def maker_agent(question, knowledge_context):
     """
