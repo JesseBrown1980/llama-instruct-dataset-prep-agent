@@ -35,7 +35,24 @@ def start_ollama(ip):
     """Start Ollama in Ubuntu-22.04 with the specified IP and ensure model is available"""
     logger.info(f"Starting Ollama in Ubuntu-22.04 on {ip}...")
     try:
-        # Run ollama serve in Ubuntu-22.04
+        # Kill any existing Ollama processes in WSL
+        subprocess.run(
+            ['wsl.exe', '-d', 'Ubuntu-22.04', '--', 'sudo', 'killall', '-9', 'ollama'],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE
+        )
+        
+        # Shutdown WSL to clean up any lingering processes
+        subprocess.run(
+            ['wsl.exe', '--shutdown'],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE
+        )
+        
+        # Wait a moment for WSL to fully shutdown
+        time.sleep(2)
+        
+        # Run ollama serve in Ubuntu-22.04 with public IP
         subprocess.Popen(
             ['wsl.exe', '-d', 'Ubuntu-22.04', '--', f'OLLAMA_HOST={ip}:11434', 'ollama', 'serve'],
             stdout=subprocess.PIPE,
@@ -49,23 +66,13 @@ def start_ollama(ip):
                 resp = requests.get(url)
                 if resp.status_code == 200:
                     logger.info("Successfully started Ollama")
-                    break
+                    return True
             except:
                 time.sleep(1)
                 continue
-        else:
-            logger.error("Timed out waiting for Ollama to start")
-            return False
-
-        # Pull the model
-        logger.info("Pulling model llama3:8b...")
-        subprocess.run(
-            ['wsl.exe', '-d', 'Ubuntu-22.04', '--', 'ollama', 'pull', 'llama3:8b'],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE
-        )
         
-        return True
+        logger.error("Timed out waiting for Ollama to start")
+        return False
         
     except Exception as e:
         logger.error(f"Failed to start Ollama: {str(e)}")
@@ -248,7 +255,7 @@ Raw text:
 {chunk}
 Return cleaned text. No pleasantries.
 """
-        partial_cleaned = ollama_invoke(prompt, model="llama2", temperature=0.0, agent_name="cleaner_agent")
+        partial_cleaned = ollama_invoke(prompt, model="llama3:8b", temperature=0.0, agent_name="cleaner_agent")
         cleaned_result.append(partial_cleaned)
         start = end
     return "\n".join(cleaned_result).strip()
@@ -263,7 +270,7 @@ You are a questioner agent. Generate interesting legal questions from this knowl
 {knowledge_context}
 Output only JSON.
 """
-    return ollama_invoke(prompt, model="llama2", temperature=0.2, 
+    return ollama_invoke(prompt, model="llama3:8b", temperature=0.2, 
                         format_spec="json", agent_name="questioner_agent")
 
 def question_checker_agent_invoke(question_list_json):
@@ -276,7 +283,7 @@ You are a question checker agent. Check these questions for redundancy or errors
 Questions:
 {question_list_json}
 """
-    return ollama_invoke(prompt, model="llama2", temperature=0.0, 
+    return ollama_invoke(prompt, model="llama3:8b", temperature=0.0, 
                         format_spec="json", agent_name="question_checker_agent")
 
 def maker_agent(question, knowledge_context):
@@ -290,7 +297,7 @@ Question:
 {question}
 No pleasantries.
 """
-    return ollama_invoke(prompt, model="llama2", temperature=0.2, agent_name="maker_agent")
+    return ollama_invoke(prompt, model="llama3:8b", temperature=0.2, agent_name="maker_agent")
 
 def formatter_agent(raw_answer, question, context):
     """
@@ -312,7 +319,7 @@ Context: {context}
         "required": ["instruction", "context", "response"]
     }
     
-    return ollama_invoke(prompt, model="llama2", temperature=0.0, 
+    return ollama_invoke(prompt, model="llama3:8b", temperature=0.0, 
                         format_spec=format_spec, agent_name="formatter_agent")
 
 def checker_agent(draft_json):
@@ -324,5 +331,5 @@ You are a checker agent. Check this JSON for logical consistency:
 {draft_json}
 Return corrected JSON if needed. No other text.
 """
-    return ollama_invoke(prompt, model="llama2", temperature=0.0, 
+    return ollama_invoke(prompt, model="llama3:8b", temperature=0.0, 
                         format_spec="json", agent_name="checker_agent")
