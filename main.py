@@ -76,7 +76,10 @@ def main():
     if not wait_for_file(args.kb_output):
         logger.error(f"Timeout waiting for knowledge base file: {args.kb_output}")
         return
-
+    #sleep for 30 seconds 
+    time.sleep(30)
+    
+    
     # Step 2: Create Dataset
     logger.info("Starting dataset creation pipeline")
     dataset_thread = PipelineThread(
