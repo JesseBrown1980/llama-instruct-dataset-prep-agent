@@ -2,7 +2,7 @@ import threading
 import logging
 import argparse
 import time
-from build_knowledge import main as build_knowledge_main
+from build_knowledge import build_knowledge_base
 from create_dataset import create_dataset
 import os
 
@@ -60,9 +60,8 @@ def main():
     # Step 1: Build Knowledge Base
     logger.info("Starting knowledge base creation pipeline")
     build_thread = PipelineThread(
-        target=build_knowledge_main,
+        target=build_knowledge_base,
         name="Knowledge Base Creation",
-        args=[],
         kwargs={
             "owl_input": args.owl_input,
             "output": args.kb_output,
