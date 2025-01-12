@@ -42,30 +42,23 @@ def parse_limit(limit_str: str) -> int:
     except ValueError:
         raise argparse.ArgumentTypeError(f"'{limit_str}' is not a valid limit. Use a positive number or 'all'")
 
-def main():
-    # Parse command line arguments
-    parser = argparse.ArgumentParser(description='Build knowledge base from OWL file')
-    parser.add_argument('--owl-input', type=str, required=True, help='Path to input OWL file')
-    parser.add_argument('--output', type=str, required=True, help='Path to output JSON file')
-    parser.add_argument('--limit', type=str, default="all", help='Number of classes and properties to process or \'all\' for no limit')
-    
-    args = parser.parse_args()
-    
+def build_knowledge_base(owl_input: str, output: str, limit: str = "all"):
+    """Build knowledge base from OWL file."""
     # Parse the limit
-    limit = parse_limit(args.limit)
+    limit_num = parse_limit(limit)
 
     # Ensure output file exists
-    ensure_file_exists(args.output)
+    ensure_file_exists(output)
 
     # Build knowledge graph
     build_knowledge_graph(
-        owl_file=args.owl_input,
-        output_file=args.output,
-        limit=limit
+        owl_file=owl_input,
+        output_file=output,
+        limit=limit_num
     )
     
     # Download and clean references
-    knowledge_base = json.load(open(args.output))
+    knowledge_base = json.load(open(output))
     clean_refs = []
     for ref in knowledge_base["refs"]:
         ref_url = str(ref)
@@ -83,12 +76,22 @@ def main():
     knowledge_base["downloadedRefs"] = clean_refs
     
     # Save knowledge base
-    with open(args.output, "w") as f:
+    with open(output, "w") as f:
         json.dump(knowledge_base, f, indent=2)
     
-    logger.info(f"Knowledge base creation complete. Output saved to {args.output}")
-    if limit:
-        logger.info(f"Note: Output was limited to {limit} classes and properties for testing")
+    logger.info(f"Knowledge base creation complete. Output saved to {output}")
+    if limit_num:
+        logger.info(f"Note: Output was limited to {limit_num} classes and properties for testing")
+
+def main():
+    # Parse command line arguments
+    parser = argparse.ArgumentParser(description='Build knowledge base from OWL file')
+    parser.add_argument('--owl-input', type=str, required=True, help='Path to input OWL file')
+    parser.add_argument('--output', type=str, required=True, help='Path to output JSON file')
+    parser.add_argument('--limit', type=str, default="all", help='Number of classes and properties to process or \'all\' for no limit')
+    
+    args = parser.parse_args()
+    build_knowledge_base(args.owl_input, args.output, args.limit)
 
 if __name__ == "__main__":
     main()
