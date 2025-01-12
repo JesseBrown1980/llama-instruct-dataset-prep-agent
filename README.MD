@@ -31,10 +31,33 @@ ollama run llama3:8b
 ## Running the Pipeline
 
 ### Full Pipeline
-Run the entire pipeline with default settings:
+Run both knowledge base creation and dataset generation:
 ```bash
-python main.py
+python main.py --owl-input input.owl --kb-output kb.json --dataset-output dataset.json --kb-limit [number|all] --dataset-limit [number|all]
 ```
+Arguments:
+- `--owl-input`: Path to input OWL file
+- `--kb-output`: Path to save knowledge base JSON
+- `--dataset-output`: Path to save final dataset
+- `--kb-limit`: Number of classes/properties to process for knowledge base or 'all'
+- `--dataset-limit`: Number of nodes to process for dataset creation or 'all'
+
+Examples:
+```bash
+# Process everything
+python main.py --owl-input input.owl --kb-output kb.json --dataset-output dataset.json --kb-limit all --dataset-limit all
+
+# Process 100 classes but only generate dataset from 10 nodes
+python main.py --owl-input input.owl --kb-output kb.json --dataset-output dataset.json --kb-limit 100 --dataset-limit 10
+
+# Process all classes but limit dataset generation
+python main.py --owl-input input.owl --kb-output kb.json --dataset-output dataset.json --kb-limit all --dataset-limit 50
+```
+
+This will:
+1. Create knowledge base from OWL file (using kb-limit)
+2. Generate instruction dataset from knowledge base (using dataset-limit)
+3. Write outputs to specified files
 
 ### Individual Components
 
