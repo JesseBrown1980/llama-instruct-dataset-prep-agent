@@ -112,6 +112,54 @@ The pipeline generates several files:
 - `class_counter.txt`: Statistics about processed classes
 - `token_cost.json`: Token usage tracking
 
+## Testing
+
+### Setup Test Environment
+```bash
+# Create virtual environment if not already done
+python -m venv venv
+source venv/bin/activate  # Linux/Mac
+# OR
+.\venv\Scripts\activate  # Windows
+
+# Install test dependencies
+pip install -r tests/requirements.txt
+```
+
+### Run Tests
+```bash
+# Run all tests
+pytest tests/
+
+# Run with coverage report
+pytest tests/ --cov=./ --cov-report=term-missing
+
+# Run specific test file
+pytest tests/test_agents.py
+pytest tests/test_pipeline.py
+
+# Run specific test function
+pytest tests/test_agents.py::test_questioner_agent
+```
+
+### Test Coverage
+The test suite covers:
+1. Agent Functions
+   - Question generation and validation
+   - Instruction and response creation
+   - Text cleaning and processing
+   
+2. Pipeline Components
+   - Knowledge base creation from OWL
+   - Dataset generation from knowledge base
+   - End-to-end pipeline integration
+
+### Writing New Tests
+Add new tests to:
+- `tests/test_agents.py` for agent functionality
+- `tests/test_pipeline.py` for pipeline components
+- `tests/conftest.py` for shared fixtures and setup
+
 ## Monitoring
 
 - Check `dataset_creation.log` for detailed processing logs
