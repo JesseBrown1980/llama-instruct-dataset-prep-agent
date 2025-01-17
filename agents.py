@@ -169,6 +169,9 @@ def ollama_invoke(prompt, model="llama2", temperature=0.8, format_spec="text", a
             
             text = result['response'].strip()
             
+            # Extract eval count from response
+            eval_count = result.get('eval_count', 1)  # Default to 1 if not present
+            
             if format_spec == "json":
                 try:
                     # Find the first [ and last ]
@@ -180,7 +183,7 @@ def ollama_invoke(prompt, model="llama2", temperature=0.8, format_spec="text", a
                         # Validate JSON before returning
                         json.loads(json_str)  # This will raise if invalid
                         logger.info(f"Successfully completed {agent_name} request")
-                        update_token_cost()  # Track successful evaluation
+                        update_token_cost(eval_count)  # Track successful evaluation with actual count
                         return json_str
                         
                     logger.error(f"No JSON array found in response: {text}")
@@ -192,7 +195,7 @@ def ollama_invoke(prompt, model="llama2", temperature=0.8, format_spec="text", a
                     return "[]"  # Return empty array as fallback
             
             logger.info(f"Successfully completed {agent_name} request")
-            update_token_cost()  # Track successful evaluation
+            update_token_cost(eval_count)  # Track successful evaluation with actual count
             return text
             
         except Exception as e:
