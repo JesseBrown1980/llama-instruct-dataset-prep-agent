@@ -14,6 +14,12 @@ from agents import (
     make_instruction_agent,
     create_dataset_entry
 )
+from create_dataset_from_node import (
+    get_node_context,
+    chunk_text_with_overlap,
+    process_node,
+    DatasetCreator
+)
 
 # Configure logging
 logging.basicConfig(
@@ -26,155 +32,55 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-def chunk_text(text: str, max_words: int = 2000) -> List[str]:
-    """Split text into chunks of approximately max_words."""
-    words = text.split()
-    chunks = []
-    current_chunk = []
-    current_count = 0
-    
-    for word in words:
-        current_chunk.append(word)
-        current_count += 1
-        
-        if current_count >= max_words:
-            chunks.append(' '.join(current_chunk))
-            current_chunk = []
-            current_count = 0
-            
-    if current_chunk:
-        chunks.append(' '.join(current_chunk))
-        
-    return chunks
-
-class DatasetCreator:
-    def __init__(self, output_path: str):
-        self.output_path = output_path
-        
-        # Initialize data files
-        self.data_dir = os.path.join(os.path.dirname(output_path), 'data')
-        os.makedirs(self.data_dir, exist_ok=True)
-        
-        self.chunks_file = os.path.join(self.data_dir, 'chunks.jsonl')
-        self.questions_file = os.path.join(self.data_dir, 'questions.jsonl')
-        self.dataset_file = os.path.join(self.data_dir, 'dataset.jsonl')
-        
-        # Clear files
-        open(self.chunks_file, 'w').close()
-        open(self.questions_file, 'w').close()
-        open(self.dataset_file, 'w').close()
-
-    def process_chunk(self, context_chunk: str, node_key: str, chunk_index: int) -> None:
-        """Process a single context chunk to generate questions and answers."""
-        # Generate questions - wait for completion
-        logger.info(f"Generating questions")
-        questions_json = questioner_agent_invoke(context_chunk)
-        questions = json.loads(questions_json)
-        
-        if not questions:
-            logger.warning(f"No questions generated")
-            return
-            
-        # Write raw questions
-        questions_jsonl = ""
-        with open(self.questions_file, 'a', encoding='utf-8') as f:
-            for q in questions:
-                question = {"question": q}
-                question_json = json.dumps(question)
-                f.write(question_json + '\n')
-                f.flush()
-                questions_jsonl += question_json + '\n'
-        
-        # Validate questions - wait for completion
-        logger.info(f"Validating questions")
-        cleaned_questions_json = question_checker_agent_invoke(questions_jsonl)
-        cleaned_questions = json.loads(cleaned_questions_json)
-        
-        if not cleaned_questions:
-            logger.warning(f"No questions passed validation")
-            return
-            
-        # Process each validated question and write immediately
-        logger.info(f"Processing {len(cleaned_questions)} validated questions")
-        successful_entries = 0
-        
-        for question in cleaned_questions:
-            # Generate instruction with higher temperature for creativity
-            logger.info(f"Generating instruction for question: {question}")
-            instruction = make_instruction_agent(question, context_chunk)
-                
-            # Generate response with lower temperature for accuracy
-            logger.info(f"Generating response")
-            response = maker_agent(question, context_chunk)
-            
-            # Create entry - both instruction and response are guaranteed by retry logic
-            entry = {
-                "instruction": instruction.strip(),
-                "context": context_chunk.strip(),
-                "response": response.strip()
-            }
-            
-            # Write immediately
-            with open(self.dataset_file, 'a', encoding='utf-8') as f:
-                f.write(json.dumps(entry) + '\n')
-                f.flush()
-            successful_entries += 1
-            logger.info(f"Successfully wrote entry {successful_entries} for question: {question}")
-                
-        logger.info(f"Completed processing - wrote {successful_entries}/{len(cleaned_questions)} entries")
-
-    def process_node(self, node: Dict) -> None:
-        """Process a single node by generating questions from each chunk."""
-        node_key = node['key']
-        logger.info(f"Processing node: {node_key}")
-        
-        # Build context
-        context = ""
-        if node.get('context'):
-            for ctx in node['context']:
-                if ctx.get('type') == 'definition' and ctx.get('text'):
-                    context = ctx['text']
-                    break
-        
-        if not context:
-            return
-            
-        # Clean and chunk
-        cleaned_context = cleaner_agent(context)
-        chunks = chunk_text(cleaned_context)
-        
-        # Process chunks
-        for i, chunk in enumerate(chunks, 1):
-            self.process_chunk(chunk, node_key, i)
-
-def create_dataset(kb_path: str, output: str, limit: str = None):
+def create_dataset(kb_path: str, output: str, limit: Optional[str] = None) -> None:
     """Create dataset from knowledge base."""
     # Load knowledge base
+    logger.info(f"Loading knowledge base from {kb_path}")
     with open(kb_path, 'r', encoding='utf-8') as f:
         kb = json.load(f)
         
     # Create dataset
     creator = DatasetCreator(output)
     
-    # Process nodes
-    nodes = list(kb['nodes'].items())
+    # Convert limit to int if specified
+    limit_num = None
     if limit and limit.lower() != 'all':
         try:
             limit_num = int(limit)
-            nodes = nodes[:limit_num]
         except ValueError:
             logger.error(f"Invalid limit value: {limit}. Use 'all' or a number.")
             return
+    
+    # Process each root node until limit is reached
+    processed_count = 0
+    nodes = kb.get('nodes', {})
+    
+    # Find root nodes (nodes without parents)
+    root_nodes = []
+    for node_key, node in nodes.items():
+        # A node is a root if no other node has it as a child
+        if not any(node_key in other_node.get('children', []) for other_node in nodes.values()):
+            root_nodes.append(node_key)
+    
+    # Process each root node
+    for root_key in root_nodes:
+        if root_key in nodes:
+            processed_count = process_node(
+                nodes[root_key],
+                processed_count,
+                limit_num,
+                nodes,
+                creator
+            )
             
-    for node_key, node in nodes:
-        creator.process_node(node)
+            if limit_num is not None and processed_count >= limit_num:
+                break
 
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--kb-path', required=True, help='Path to knowledge base JSON file')
-    parser.add_argument('--output', required=True, help='Path to output dataset file')
-    parser.add_argument('--limit', type=str, default=None, 
-                      help='Limit number of nodes to process. Use "all" for no limit or a number')
+    parser.add_argument('--output', required=True, help='Path to output directory')
+    parser.add_argument('--limit', default='all', help='Number of nodes to process (default: all)')
     return parser.parse_args()
 
 def main():
