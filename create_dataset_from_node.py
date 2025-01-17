@@ -257,6 +257,7 @@ def create_dataset_from_node(kb_path: str, output: str, start_node_id: str, limi
                             question_info = {
                                 'node_key': current_id,
                                 'chunk_index': i,
+                                'chunk_text': chunk,
                                 'question': q,
                                 'status': 'raw',
                                 'timestamp': datetime.now().isoformat()
