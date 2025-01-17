@@ -14,6 +14,7 @@ from agents import (
     make_instruction_agent,
     create_dataset_entry
 )
+from error_handler import handle_error
 
 # Ensure data directory exists
 os.makedirs('data', exist_ok=True)
@@ -272,7 +273,7 @@ def create_dataset_from_node(kb_path: str, output: str, start_node_id: str, limi
                                     f.write(entry + '\n')
                                     f.flush()
                         except Exception as e:
-                            logger.error(f"Error processing question for node {current_id}: {str(e)}")
+                            handle_error(e, context=f"Processing question for node {current_id}")
             
             # Mark node as processed
             processed_nodes.add(current_id)
@@ -296,7 +297,7 @@ def create_dataset_from_node(kb_path: str, output: str, start_node_id: str, limi
                             nodes_to_process.append(child_id)
             
         except Exception as e:
-            logger.error(f"Error processing node {current_id}: {str(e)}")
+            handle_error(e, context=f"Processing node {current_id}")
             continue
     
     logger.info(f"Processed {nodes_processed} nodes out of {total_nodes} total nodes")
@@ -333,9 +334,12 @@ def parse_args():
     return parser.parse_args()
 
 def main():
-    args = parse_args()
-    limit = None if args.limit.lower() == 'all' else int(args.limit)
-    create_dataset_from_node(args.kb_path, args.output, args.start_node_id, limit)
+    try:
+        args = parse_args()
+        limit = None if args.limit.lower() == 'all' else int(args.limit)
+        create_dataset_from_node(args.kb_path, args.output, args.start_node_id, limit)
+    except Exception as e:
+        handle_error(e, context="create_dataset_from_node main")
 
 if __name__ == "__main__":
     main()
