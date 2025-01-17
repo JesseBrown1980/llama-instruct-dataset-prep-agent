@@ -172,6 +172,9 @@ def ollama_invoke(prompt, model="llama2", temperature=0.8, format_spec="text", a
             # Extract eval count from response
             eval_count = result.get('eval_count', 1)  # Default to 1 if not present
             
+            # Update metrics from response
+            update_token_metrics(result)
+            
             if format_spec == "json":
                 try:
                     # Find the first [ and last ]
@@ -212,6 +215,17 @@ def log_token_cost(agent_name, eval_count, eval_duration_ns):
     """Log token cost metrics to token_cost.json"""
     global _token_cost
     
+    # Initialize metrics if not present
+    if "metrics" not in _token_cost:
+        _token_cost["metrics"] = {
+            "total_duration": 0,
+            "load_duration": 0,
+            "prompt_eval_count": 0,
+            "prompt_eval_duration": 0,
+            "eval_count": 0,
+            "eval_duration": 0
+        }
+    
     # Update task-specific stats
     if agent_name not in _token_cost["tasks"]:
         _token_cost["tasks"][agent_name] = {
@@ -227,6 +241,33 @@ def log_token_cost(agent_name, eval_count, eval_duration_ns):
     _token_cost["total_eval_duration_ns"] += eval_duration_ns
     
     # Write accumulated stats to file
+    with open('token_cost.json', 'w') as f:
+        json.dump(_token_cost, f, indent=4)
+
+def update_token_metrics(result):
+    """Update token metrics from Ollama response"""
+    global _token_cost
+    
+    # Initialize metrics if needed
+    if "metrics" not in _token_cost:
+        _token_cost["metrics"] = {
+            "total_duration": 0,
+            "load_duration": 0,
+            "prompt_eval_count": 0,
+            "prompt_eval_duration": 0,
+            "eval_count": 0,
+            "eval_duration": 0
+        }
+    
+    # Update metrics from response
+    _token_cost["metrics"]["total_duration"] += result.get('total_duration', 0)
+    _token_cost["metrics"]["load_duration"] += result.get('load_duration', 0)
+    _token_cost["metrics"]["prompt_eval_count"] += result.get('prompt_eval_count', 0)
+    _token_cost["metrics"]["prompt_eval_duration"] += result.get('prompt_eval_duration', 0)
+    _token_cost["metrics"]["eval_count"] += result.get('eval_count', 0)
+    _token_cost["metrics"]["eval_duration"] += result.get('eval_duration', 0)
+    
+    # Write to file
     with open('token_cost.json', 'w') as f:
         json.dump(_token_cost, f, indent=4)
 
