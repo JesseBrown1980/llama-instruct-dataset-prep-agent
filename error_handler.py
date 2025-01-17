@@ -80,6 +80,25 @@ def handle_error(error: Exception, context: str = "") -> None:
             logger.error("Could not determine last processed node. Cannot continue.")
             return
             
+        # Log restart information
+        restart_log_path = os.path.join('data', 'restart.jsonl')
+        restart_entry = {
+            'timestamp': datetime.now().isoformat(),
+            'node_key': last_node,
+            'error': {
+                'type': type(error).__name__,
+                'message': str(error),
+                'context': context
+            },
+            'restart_metadata': {
+                'wait_time_seconds': 600,
+                'recovery_script': 'create_dataset_from_node.py'
+            }
+        }
+        with open(restart_log_path, 'a', encoding='utf-8') as f:
+            f.write(json.dumps(restart_entry) + '\n')
+            f.flush()
+            
         # Wait 10 minutes
         logger.info(f"Waiting 10 minutes before resuming from node {last_node}")
         time.sleep(600)  # 10 minutes in seconds
