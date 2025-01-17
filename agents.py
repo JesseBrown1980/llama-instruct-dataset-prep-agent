@@ -7,7 +7,9 @@ import json
 import logging
 import time
 from datetime import datetime
-from typing import List
+from typing import List, Optional
+import uuid
+import re
 
 logger = logging.getLogger(__name__)
 
@@ -19,6 +21,23 @@ _token_cost = {
     "tasks": {}
 }
 
+def update_token_cost(eval_count: int = 1) -> None:
+    """Update the token cost tracking file with new evaluations."""
+    cost_file = "token_cost.json"
+    try:
+        if os.path.exists(cost_file):
+            with open(cost_file, 'r') as f:
+                costs = json.load(f)
+        else:
+            costs = {"total_eval_count": 0}
+            
+        costs["total_eval_count"] += eval_count
+        
+        with open(cost_file, 'w') as f:
+            json.dump(costs, f, indent=2)
+            
+    except Exception as e:
+        logger.error(f"Error updating token cost: {str(e)}")
 
 def get_machine_ip():
     """Get the current machine's IP address"""
@@ -161,6 +180,7 @@ def ollama_invoke(prompt, model="llama2", temperature=0.8, format_spec="text", a
                         # Validate JSON before returning
                         json.loads(json_str)  # This will raise if invalid
                         logger.info(f"Successfully completed {agent_name} request")
+                        update_token_cost()  # Track successful evaluation
                         return json_str
                         
                     logger.error(f"No JSON array found in response: {text}")
@@ -172,6 +192,7 @@ def ollama_invoke(prompt, model="llama2", temperature=0.8, format_spec="text", a
                     return "[]"  # Return empty array as fallback
             
             logger.info(f"Successfully completed {agent_name} request")
+            update_token_cost()  # Track successful evaluation
             return text
             
         except Exception as e:
@@ -277,42 +298,6 @@ def questioner_agent_invoke(knowledge_context):
     Generate questions from knowledge context.
     Returns a JSON array of strings (the questions).
     """
-    # If context is too large, chunk it first
-    MAX_CONTEXT_LENGTH = 4000  # characters
-    if len(knowledge_context) > MAX_CONTEXT_LENGTH:
-        chunks = chunk_text_with_overlap(knowledge_context, chunk_size=MAX_CONTEXT_LENGTH//4)  # words
-        all_questions = set()
-        
-        for chunk in chunks:
-            chunk_prompt = f"""You are an expert questioner. Generate 2-3 specific, detailed questions about this part of the knowledge:
-
-{chunk}
-
-Questions must:
-- Be answerable from just this context
-- Be specific and detailed
-- Focus on key information
-
-Generate questions in numbered format:
-1. [Question]
-2. [Question]
-etc."""
-            
-            try:
-                questions_text = ollama_invoke(chunk_prompt, model="llama3:8b", temperature=0.7,
-                                            format_spec="text", agent_name="questioner_agent")
-                
-                # Format this chunk's questions
-                chunk_questions = process_chunk_with_retry(questions_text)
-                all_questions.update(chunk_questions)
-                
-            except Exception as e:
-                logger.error(f"Failed to process knowledge chunk: {str(e)}")
-                continue
-        
-        return json.dumps(list(all_questions))
-    
-    # For smaller contexts, process normally
     prompt = f"""You are an expert questioner. Your task is to generate high-quality, diverse questions from the given knowledge.
 
 Generate 5-7 questions that:
@@ -333,35 +318,16 @@ Generate questions in this format:
 
 Remember: Only ask questions that can be answered using the context provided."""
 
-    # Get free-form questions
+    # Get questions and track token usage
     questions_text = ollama_invoke(prompt, model="llama3:8b", temperature=0.7,
                                  format_spec="text", agent_name="questioner_agent")
     
-    # Process and return questions
+    # Format questions to array
     questions = process_chunk_with_retry(questions_text)
     return json.dumps(list(questions))
 
-def process_chunk_with_retry(chunk, max_retries=3):
-    """Process a chunk with retries on failure."""
-    retry_count = 0
-    while retry_count < max_retries:
-        try:
-            chunk_questions_json = format_questions_to_json(chunk)
-            return json.loads(chunk_questions_json)
-        except (json.JSONDecodeError, Exception) as e:
-            retry_count += 1
-            if retry_count == max_retries:
-                logger.error(f"Failed to process chunk after {max_retries} retries: {str(e)}")
-                raise
-            logger.warning(f"Retry {retry_count}/{max_retries} for chunk processing")
-            # Immediate retry, no wait
-
 def question_checker_agent_invoke(questions_jsonl: str) -> str:
-    """
-    Check a list of questions for quality and redundancy.
-    Input is JSONL format with questions. Returns a cleaned JSON array of questions.
-    """
-    # Extract just the questions from JSONL
+    """Check questions for quality and redundancy."""
     questions = []
     try:
         for line in questions_jsonl.split('\n'):
@@ -371,14 +337,11 @@ def question_checker_agent_invoke(questions_jsonl: str) -> str:
                     questions.append(q_obj['question'])
     except Exception as e:
         logger.error(f"Failed to parse questions JSONL: {str(e)}")
-        logger.error(f"Input JSONL: {questions_jsonl}")
         return "[]"
 
     if not questions:
-        logger.error("No questions found in JSONL input")
         return "[]"
 
-    logger.info(f"Checking {len(questions)} questions")
     prompt = f"""You are a question checker agent. Return ALL questions that are not completely invalid.
 Keep ALL questions unless they are:
 1. Not actually questions (statements, fragments, etc.)
@@ -399,55 +362,334 @@ Return ONLY a JSON array of the valid questions, like this:
 
 DO NOT explain or add any other text. ONLY return the JSON array."""
 
+    # Check questions and track token usage
     result = ollama_invoke(prompt, model="llama3:8b", temperature=0.0,
                         format_spec="json", agent_name="question_checker_agent")
     
-    # Ensure we have valid JSON array
     try:
         cleaned_questions = json.loads(result)
         if not isinstance(cleaned_questions, list):
-            logger.error(f"Question checker returned non-array JSON: {result}")
-            return json.dumps(questions)  # Return original questions
-        
+            return json.dumps(questions)
         if not cleaned_questions:
-            logger.warning("Question checker returned empty array")
-            return json.dumps(questions)  # Return original questions
-            
-        logger.info(f"Kept {len(cleaned_questions)} questions after checking")
+            return json.dumps(questions)
         return json.dumps(cleaned_questions)
     except Exception as e:
         logger.error(f"Failed to parse question checker output: {str(e)}")
-        logger.error(f"Raw output: {result}")
-        return json.dumps(questions)  # Return original questions
+        return json.dumps(questions)
 
-def maker_agent(question: str, context: str, max_retries: int = 3) -> str:
-    """
-    Produces a concise answer based on knowledge_context for a single question.
-    Lower temperature (0.2) for more accurate, context-focused responses.
-    Will retry up to max_retries times if generation fails.
-    """
+def make_instruction_agent(question: str, context: str, max_retries: int = 3) -> str:
+    """Convert question into instruction format."""
     for attempt in range(max_retries):
         try:
-            prompt = f"""Answer this question based ONLY on the provided context.
-Be direct, specific, and comprehensive.
+            prompt = f"""Convert this question into a clear instruction for an AI model.
+The instruction should be detailed and specific.
 
 Context: {context}
-
 Question: {question}
 
-Return ONLY your answer, no other text."""
+Return ONLY the instruction as a single string. No other text."""
 
-            answer = ollama_invoke(prompt, model="llama3:8b", temperature=0.2 + (attempt * 0.1),
-                              format_spec="text", agent_name="answer_maker")
-            result = answer.strip().strip('"')
-            if result:
+            # Generate instruction and track token usage
+            instruction = ollama_invoke(prompt, model="llama3:8b", 
+                                   temperature=0.7 + (attempt * 0.1),
+                                   format_spec="text", 
+                                   agent_name="instruction_maker")
+            
+            if instruction.strip():
+                return instruction.strip()
+                
+        except Exception as e:
+            logger.warning(f"Instruction generation failed on attempt {attempt + 1}/{max_retries}")
+            
+    return question  # Fallback to using question as instruction
+
+def maker_agent(question: str, context: str, max_retries: int = 3) -> str:
+    """Generate response for instruction."""
+    for attempt in range(max_retries):
+        try:
+            prompt = f"""Generate a clear, accurate response to this instruction using ONLY the provided context.
+Be direct and comprehensive.
+
+Context: {context}
+Instruction: {question}
+
+Return ONLY your response, no other text."""
+
+            # Generate response and track token usage
+            response = ollama_invoke(prompt, model="llama3:8b", 
+                                temperature=0.2 + (attempt * 0.1),
+                                format_spec="text", 
+                                agent_name="response_maker")
+            
+            if response.strip():
+                return response.strip()
+                
+        except Exception as e:
+            logger.warning(f"Response generation failed on attempt {attempt + 1}/{max_retries}")
+            
+    # Fallback to extracting from context
+    return extract_relevant_context(context, question)
+
+def checker_agent(draft_json: str) -> str:
+    """Verify response quality and consistency."""
+    try:
+        entry = json.loads(draft_json)
+        prompt = f"""Verify this instruction-response pair is high quality and consistent.
+Check that:
+1. Response directly answers the instruction
+2. Response uses ONLY information from context
+3. Response is clear and well-formed
+4. No formatting issues or artifacts
+
+Instruction: {entry.get('instruction', '')}
+Context: {entry.get('context', '')}
+Response: {entry.get('response', '')}
+
+If the response needs improvement, fix it and return the corrected JSON.
+Otherwise return the original JSON unchanged.
+Return ONLY the JSON object."""
+
+        # Check response and track token usage
+        result = ollama_invoke(prompt, model="llama3:8b", temperature=0.1,
+                           format_spec="json", agent_name="response_checker")
+        
+        return result
+    except Exception as e:
+        logger.error(f"Response checking failed: {str(e)}")
+        return draft_json
+
+def formatter_agent(raw_answer: str, question: str, context: str) -> str:
+    """Format response into clean dataset entry."""
+    prompt = f"""Format this instruction-response pair into clean JSON.
+Remove any artifacts or inconsistencies.
+Keep ONLY essential information.
+
+Format must be EXACTLY:
+{{
+    "instruction": "clear instruction",
+    "context": "relevant context",
+    "response": "clear response"
+}}
+
+Raw input:
+Instruction: {question}
+Context: {context}
+Response: {raw_answer}
+
+Return ONLY the formatted JSON object."""
+
+    # Format entry and track token usage
+    result = ollama_invoke(prompt, model="llama3:8b", temperature=0.1,
+                        format_spec="json", agent_name="entry_formatter")
+    
+    try:
+        entry = json.loads(result)
+        required = ["instruction", "context", "response"]
+        if all(k in entry for k in required):
+            return json.dumps(entry)
+    except Exception as e:
+        logger.error(f"Formatting failed: {str(e)}")
+        
+    # Fallback to manual formatting
+    return json.dumps({
+        "instruction": question.strip(),
+        "context": context.strip(),
+        "response": raw_answer.strip()
+    })
+
+def retry_until_success(func, *args, timeout=60, initial_delay=1, backoff_factor=2, **kwargs):
+    """Retry a function until success or timeout.
+    
+    Args:
+        func: Function to retry
+        args: Positional arguments for func
+        timeout: Maximum seconds to try before giving up (default: 60)
+        initial_delay: Initial delay between retries in seconds (default: 1)
+        backoff_factor: Multiply delay by this factor after each retry (default: 2)
+        kwargs: Keyword arguments for func
+        
+    Returns:
+        Result from func
+        
+    Raises:
+        TimeoutError: If no valid result is obtained within timeout period
+    """
+    start_time = time.time()
+    delay = initial_delay
+    attempt = 1
+    
+    def is_valid_result(result):
+        """Check if result is valid (not None and has content)."""
+        if result is None:
+            return False
+        if isinstance(result, str) and not result.strip():
+            return False
+        if isinstance(result, (list, dict)) and not result:
+            return False
+        return True
+    
+    while (time.time() - start_time) < timeout:
+        try:
+            result = func(*args, **kwargs)
+            if is_valid_result(result):
+                logger.info(f"Succeeded on attempt {attempt} after {time.time() - start_time:.1f}s")
+                update_token_cost()  # Track successful evaluation
                 return result
                 
-            logger.warning(f"Empty response generated on attempt {attempt + 1}/{max_retries}")
-        except Exception as e:
-            logger.warning(f"Response generation failed on attempt {attempt + 1}/{max_retries}: {str(e)}")
+            logger.warning(
+                f"Attempt {attempt} returned invalid result after {time.time() - start_time:.1f}s. "
+                f"Retrying in {delay}s..."
+            )
             
-    # If all retries failed, extract relevant info from context
+        except Exception as e:
+            logger.warning(
+                f"Attempt {attempt} failed with error after {time.time() - start_time:.1f}s: {str(e)}. "
+                f"Retrying in {delay}s..."
+            )
+            
+        time.sleep(delay)
+        delay = min(delay * backoff_factor, timeout/4)  # Cap delay at 1/4 of timeout
+        attempt += 1
+        
+    total_time = time.time() - start_time
+    error_msg = f"Failed to get valid result after {attempt} attempts and {total_time:.1f}s"
+    logger.error(error_msg)
+    raise TimeoutError(error_msg)
+
+def create_dataset_entry(question: str, context: str, node_key: str = None) -> str:
+    """Create complete dataset entry with proper flow and validation at each step."""
+    entry_id = str(uuid.uuid4())
+    logger.info(f"Creating dataset entry {entry_id} for node {node_key}")
+    
+    try:
+        # 1. Convert question to instruction with retries
+        logger.info(f"[{entry_id}] Converting question to instruction")
+        instruction = retry_until_success(
+            make_instruction_agent,
+            question, 
+            context,
+            timeout=60  # 1 minute timeout
+        )
+        
+        # Clean instruction text
+        instruction = clean_llm_text(instruction)
+        logger.info(f"[{entry_id}] Generated instruction: {instruction}")
+            
+        # 2. Generate response with retries
+        logger.info(f"[{entry_id}] Generating response")
+        response = retry_until_success(
+            maker_agent,
+            instruction, 
+            context,
+            timeout=60
+        )
+        
+        # Clean response text
+        response = clean_llm_text(response)
+        logger.info(f"[{entry_id}] Generated response: {response}")
+        
+        # 3. Create draft JSON with proper escaping
+        draft_entry = {
+            "instruction": instruction,
+            "context": context.strip(),
+            "response": response
+        }
+        
+        # Properly escape JSON
+        draft_json = json.dumps(draft_entry, ensure_ascii=False)
+        
+        # 4. Check response quality with retries
+        logger.info(f"[{entry_id}] Checking response quality")
+        checked_entry = json.loads(draft_json)
+        if not all(k in checked_entry for k in ["instruction", "context", "response"]):
+            raise ValueError("Checked JSON missing required fields")
+        
+        # 5. Format final entry with retries
+        logger.info(f"[{entry_id}] Formatting final entry")
+        formatted_json = retry_until_success(
+            formatter_agent,
+            checked_entry["response"],
+            checked_entry["instruction"],
+            checked_entry["context"],
+            timeout=60
+        )
+        
+        # 6. Final validation and cleanup
+        final_entry = json.loads(formatted_json)
+        
+        # Validate required fields
+        if not all(k in final_entry for k in ["instruction", "context", "response"]):
+            raise ValueError("Final JSON missing required fields")
+            
+        # Validate field content
+        if any(len(final_entry[k].strip()) < 10 for k in ["instruction", "response"]):
+            raise ValueError("Final JSON has invalid field lengths")
+            
+        # Clean fields
+        for k in ["instruction", "context", "response"]:
+            if isinstance(final_entry[k], (dict, list)):
+                raise ValueError("Final JSON has nested objects")
+            # Apply final cleaning to instruction and response
+            if k in ["instruction", "response"]:
+                final_entry[k] = clean_llm_text(final_entry[k])
+            else:
+                final_entry[k] = final_entry[k].strip()
+        
+        # Final JSON string with proper escaping
+        final_json = json.dumps(final_entry, ensure_ascii=False)
+        logger.info(f"[{entry_id}] Successfully created dataset entry")
+        
+        # Log metadata to datasetlog.jsonl
+        metadata = {
+            "entry_id": entry_id,
+            "node_key": node_key,
+            "created_at": datetime.now().isoformat(),
+            "source_question": question
+        }
+        
+        with open("data/datasetlog.jsonl", "a", encoding="utf-8") as f:
+            f.write(json.dumps(metadata) + "\n")
+            f.flush()
+            
+        return final_json
+            
+    except Exception as e:
+        logger.error(f"[{entry_id}] Fatal error in dataset entry creation: {str(e)}")
+        raise  # Re-raise to handle at higher level
+
+def clean_llm_text(text: str) -> str:
+    """Clean text from LLM responses of special characters and artifacts.
+    
+    Removes:
+    - Multiple types of quotes
+    - Special brackets
+    - Multiple spaces
+    - Leading/trailing whitespace
+    """
+    # Remove various types of quotes and brackets
+    text = re.sub(r'[\[\]"\'`]', '', text)
+    
+    # Replace multiple spaces with single space
+    text = re.sub(r'\s+', ' ', text)
+    
+    return text.strip()
+
+def process_chunk_with_retry(chunk, max_retries=3):
+    """Process a chunk with retries on failure."""
+    retry_count = 0
+    while retry_count < max_retries:
+        try:
+            chunk_questions_json = format_questions_to_json(chunk)
+            return json.loads(chunk_questions_json)
+        except (json.JSONDecodeError, Exception) as e:
+            retry_count += 1
+            if retry_count == max_retries:
+                logger.error(f"Failed to process chunk after {max_retries} retries: {str(e)}")
+                raise
+            logger.warning(f"Retry {retry_count}/{max_retries} for chunk processing")
+            # Immediate retry, no wait
+
+def extract_relevant_context(context, question):
     context_words = context.split()
     question_words = set(question.lower().split())
     relevant_parts = []
@@ -461,154 +703,6 @@ Return ONLY your answer, no other text."""
         return ' '.join(relevant_parts)
     else:
         return "Based on the provided context, a specific answer could not be generated."
-
-def make_instruction_agent(question: str, context: str, max_retries: int = 3) -> str:
-    """
-    Converts a question into a clear instruction for the model.
-    Higher temperature (0.7) for more creative instruction generation.
-    Will retry up to max_retries times if generation fails.
-    """
-    for attempt in range(max_retries):
-        try:
-            prompt = f"""Convert this question into a clear instruction for an AI model.
-The instruction should be direct, specific, and focused on the task.
-
-Context: {context}
-
-Question: {question}
-
-Return ONLY the instruction text, no other text or formatting.
-Example output: "Explain the specific role and responsibilities of X in context Y"
-"""
-            
-            instruction = ollama_invoke(prompt, model="llama3:8b", temperature=0.7 - (attempt * 0.2),
-                                    format_spec="text", agent_name="instruction_maker")
-            result = instruction.strip().strip('"')
-            if result:
-                return result
-            
-            logger.warning(f"Empty instruction generated on attempt {attempt + 1}/{max_retries}")
-        except Exception as e:
-            logger.warning(f"Instruction generation failed on attempt {attempt + 1}/{max_retries}: {str(e)}")
-            
-    # If all retries failed, return a basic instruction based on the question
-    return f"Based on the provided context, {question.strip('?')}?"
-
-def formatter_agent(raw_answer, question, context):
-    """
-    Converts raw_answer into Dolly/LLAMA style JSON with format specification
-    """
-    prompt = f"""
-You are a formatter agent. Convert this into Dolly/LLAMA JSON format:
-Question: {question}
-Answer: {raw_answer}
-Context: {context}
-"""
-    format_spec = {
-        "type": "object",
-        "properties": {
-            "instruction": {"type": "string"},
-            "context": {"type": "string"},
-            "response": {"type": "string"}
-        },
-        "required": ["instruction", "context", "response"]
-    }
-    
-    return ollama_invoke(prompt, model="llama3:8b", temperature=0.0, 
-                        format_spec=format_spec, agent_name="formatter_agent")
-
-def json_validator_agent(json_str: str) -> str:
-    """
-    Validates and ensures the input is proper JSON format.
-    Returns cleaned JSON string or raises error.
-    """
-    try:
-        # First try to parse it
-        data = json.loads(json_str)
-        
-        # Check required fields
-        if not all(k in data for k in ['instruction', 'context', 'response']):
-            logger.error("Missing required fields in JSON")
-            raise ValueError("JSON missing required fields")
-            
-        # Clean any extra whitespace/quotes
-        data['instruction'] = data['instruction'].strip().strip('"')
-        data['context'] = data['context'].strip().strip('"')
-        data['response'] = data['response'].strip().strip('"')
-        
-        # Preserve metadata if present
-        if 'metadata' in data:
-            data['metadata'] = {
-                k: v.strip().strip('"') if isinstance(v, str) else v 
-                for k, v in data['metadata'].items()
-            }
-            
-        return json.dumps(data)
-    except Exception as e:
-        logger.error(f"JSON validation failed: {str(e)}")
-        logger.error(f"Input JSON: {json_str}")
-        raise
-
-def checker_agent(draft_json: str) -> str:
-    """
-    Checks logical consistency of the final Dolly JSON and returns valid JSON if needed.
-    """
-    prompt = f"""You are a JSON validator. Check this Dolly-format entry and return ONLY the validated JSON.
-If valid, return the exact same JSON. If invalid, fix any issues and return the fixed JSON.
-
-Input JSON to validate:
-{draft_json}
-
-Requirements:
-1. Must have instruction, context, and response fields
-2. All text fields must be properly escaped
-3. Must be valid JSON format
-
-Return ONLY the JSON object. No other text or explanations."""
-
-    return ollama_invoke(prompt, model="llama3:8b", temperature=0.0,
-                      format_spec="text", agent_name="checker_agent")
-
-def create_dataset_entry(question: str, context: str) -> str:
-    """
-    Creates and validates a dataset entry from a question and context.
-    Returns the JSON string for the entry.
-    """
-    prompt = f"""Create an instruction-response pair for this question and context.
-Return ONLY a JSON object with 'instruction', 'context', and 'response' fields.
-
-Context: {context}
-Question: {question}
-
-The instruction should be clear and direct.
-The response should be comprehensive but concise.
-
-Return ONLY the JSON object like this:
-{{"instruction": "Clear instruction based on question", 
-  "context": "The given context",
-  "response": "Direct answer to instruction"}}"""
-
-    result = ollama_invoke(prompt, model="llama3:8b", temperature=0.2,
-                        format_spec="text", agent_name="entry_creator")
-                        
-    try:
-        # Validate JSON
-        entry = json.loads(result)
-        if not all(k in entry for k in ['instruction', 'context', 'response']):
-            raise ValueError("Missing required fields")
-            
-        # Clean any quotes/whitespace
-        entry = {
-            "instruction": entry['instruction'].strip().strip('"'),
-            "context": entry['context'].strip().strip('"'),
-            "response": entry['response'].strip().strip('"')
-        }
-        
-        return json.dumps(entry)
-    except Exception as e:
-        logger.error(f"Failed to create entry: {str(e)}")
-        logger.error(f"Raw output: {result}")
-        raise
 
 def check_windows_ollama():
     """Check if Ollama is running on Windows and error out if it is"""
