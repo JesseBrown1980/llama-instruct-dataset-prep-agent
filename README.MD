@@ -22,6 +22,124 @@ This project is built on several key principles:
    - Metadata preservation throughout the pipeline
    - Complete audit trail in log files
 
+## System Philosophy & Architecture
+
+### Core Principles
+
+1. **Robustness First**: The system is designed to handle large-scale knowledge base processing with built-in recovery mechanisms. It prioritizes reliability over speed, ensuring that no data is lost even in case of failures.
+
+2. **Comprehensive Logging**: Every operation is logged with detailed metadata, enabling:
+   - Full audit trail of processed nodes
+   - Error tracking and debugging
+   - Progress monitoring
+   - Data quality assessment
+
+3. **Stateful Processing**: The system maintains state through various .jsonl files:
+   - `nodetraversal.jsonl`: Tracks processed nodes
+   - `chunks.jsonl`: Records text chunks
+   - `questions.jsonl`: Stores generated questions
+   - `dataset.jsonl`: Contains final dataset entries
+   - `errors.jsonl`: Logs all errors with context
+
+### Processing Strategies
+
+1. **Knowledge Base Traversal**:
+   - Sequential processing of nodes
+   - Support for both limited and full traversal
+   - Intelligent handling of parent/child relationships
+   - Progress tracking with node counts
+
+2. **Text Processing**:
+   - Chunking of large texts with overlap
+   - Context preservation across chunks
+   - Parent/child context inclusion
+   - Metadata preservation throughout pipeline
+
+3. **Question Generation**:
+   - Multi-stage validation
+   - Quality checks
+   - Context-aware question generation
+   - Duplicate detection
+
+### Error Handling & Recovery
+
+The system implements a comprehensive error handling strategy designed for long-running, mission-critical data processing:
+
+1. **Automatic Recovery**:
+   - 10-minute cooldown after errors
+   - Automatic restart from last successful node
+   - Preservation of all progress
+   - Stateful recovery across restarts
+
+2. **Error Logging**:
+   ```json
+   {
+     "timestamp": "2025-01-16T23:20:56",
+     "error_type": "OllamaError",
+     "error_message": "Connection refused",
+     "context": "Processing node ABC123"
+   }
+   ```
+
+3. **Recovery Process**:
+   - Error detection at multiple levels
+   - Context preservation
+   - Last node identification
+   - Graceful shutdown
+   - Automatic restart
+
+4. **Error Prevention**:
+   - Rate limiting
+   - Resource monitoring
+   - Progress tracking
+   - State validation
+
+### File Structure
+
+```
+data/
+  ├── dataset.jsonl       # Final dataset entries
+  ├── chunks.jsonl        # Processed text chunks
+  ├── questions.jsonl     # Generated questions
+  ├── nodetraversal.jsonl # Node processing state
+  ├── errors.jsonl        # Error log
+  └── error_recovery.log  # Recovery process log
+```
+
+### Usage
+
+1. **Full Knowledge Base Processing**:
+   ```bash
+   python create_dataset.py full-kb.json dataset.jsonl
+   ```
+
+2. **Node-Based Processing**:
+   ```bash
+   python create_dataset_from_node.py full-kb.json dataset.jsonl <node_id> --limit all
+   ```
+
+3. **Limited Processing**:
+   ```bash
+   python create_dataset_from_node.py full-kb.json dataset.jsonl <node_id> --limit 5
+   ```
+
+### Monitoring & Debugging
+
+1. **Progress Monitoring**:
+   - Check `nodetraversal.jsonl` for processed nodes
+   - Monitor `dataset.jsonl` for generated entries
+   - Review `error_recovery.log` for system status
+
+2. **Error Investigation**:
+   - Check `errors.jsonl` for error details
+   - Review `error_recovery.log` for recovery attempts
+   - Inspect relevant node in `nodetraversal.jsonl`
+
+3. **Quality Assessment**:
+   - Review `questions.jsonl` for question quality
+   - Check `chunks.jsonl` for text processing
+   - Analyze `dataset.jsonl` for final outputs
+
 ## System Flow
 
 The dataset preparation follows a carefully orchestrated flow:
@@ -94,6 +212,173 @@ The system follows a "never give up" approach to error handling:
 3. Each retry attempt is logged for debugging
 4. Only after exhausting all retries (60 second timeout) will an operation fail
 5. Failures are logged with detailed context for post-mortem analysis
+
+## Data Pipeline: From Raw Data to Instruction Dataset
+
+### 1. Knowledge Base Construction
+
+The process begins with raw data that needs to be transformed into a structured knowledge base:
+
+1. **Data Analysis**:
+   - Identify key concepts and relationships
+   - Map hierarchical structures
+   - Define node types and attributes
+   - Plan parent-child relationships
+
+2. **Knowledge Graph Design**:
+   ```json
+   {
+     "nodes": {
+       "node_id": {
+         "text": "Node definition or content",
+         "parents": ["parent1_url", "parent2_url"],
+         "children": ["child1_url", "child2_url"],
+         "metadata": {
+           "type": "concept|definition|example",
+           "domain": "specific_domain",
+           "complexity": "basic|intermediate|advanced"
+         }
+       }
+     }
+   }
+   ```
+
+3. **Node Creation**:
+   - Extract core concepts
+   - Write clear definitions
+   - Establish hierarchical links
+   - Add contextual metadata
+
+4. **Knowledge Base Validation**:
+   - Verify node connections
+   - Check for orphaned nodes
+   - Validate relationship consistency
+   - Ensure data quality
+
+### 2. Knowledge Base Processing
+
+Once the knowledge base is constructed, it undergoes preprocessing:
+
+1. **Node Analysis**:
+   - Text length assessment
+   - Context evaluation
+   - Relationship mapping
+   - Metadata validation
+
+2. **Context Assembly**:
+   ```python
+   {
+     "main_node": "Core concept definition",
+     "parent_context": "Parent nodes' definitions",
+     "child_context": "Child nodes' definitions",
+     "full_context": "Combined context with relationships"
+   }
+   ```
+
+3. **Text Processing**:
+   - Chunk large texts
+   - Preserve context across chunks
+   - Handle special characters
+   - Maintain metadata links
+
+### 3. Instruction Dataset Creation
+
+The final phase transforms the processed knowledge base into an instruction dataset:
+
+1. **Question Generation**:
+   - Analyze node content
+   - Identify key concepts
+   - Generate diverse question types
+   - Ensure context coverage
+
+2. **Answer Generation**:
+   - Extract relevant context
+   - Generate precise answers
+   - Validate against source
+   - Include supporting details
+
+3. **Dataset Entry Format**:
+   ```json
+   {
+     "instruction": "Generated question or task",
+     "context": "Relevant knowledge base context",
+     "response": "Generated answer",
+     "metadata": {
+       "source_node": "original_node_id",
+       "question_type": "definition|explanation|comparison",
+       "difficulty": "basic|intermediate|advanced"
+     }
+   }
+   ```
+
+4. **Quality Control**:
+   - Question relevance check
+   - Answer accuracy validation
+   - Context completeness
+   - Format consistency
+
+### Pipeline Flow
+
+```mermaid
+graph TD
+    A[Raw Data] --> B[Knowledge Base Design]
+    B --> C[Node Creation]
+    C --> D[KB Validation]
+    D --> E[Node Processing]
+    E --> F[Context Assembly]
+    F --> G[Question Generation]
+    G --> H[Answer Generation]
+    H --> I[Quality Control]
+    I --> J[Final Dataset]
+```
+
+### Data Transformation Example
+
+1. **Raw Data**:
+   ```text
+   Patent Assets include Design Patents, Utility Patents, and Plant Patents...
+   ```
+
+2. **Knowledge Base Node**:
+   ```json
+   {
+     "node_id": "RCBP9N5ER7Y6inNQdjggrKt",
+     "text": "Patent Assets are a type of Intellectual Property Asset...",
+     "children": [
+       "/nodes/Design_Patent_Assets",
+       "/nodes/Utility_Patent_Assets",
+       "/nodes/Plant_Patent_Assets"
+     ]
+   }
+   ```
+
+3. **Processed Context**:
+   ```json
+   {
+     "main_text": "Patent Assets are a type of Intellectual Property Asset...",
+     "child_context": "Design Patent Assets are...\nUtility Patent Assets are...",
+     "full_context": "Combined hierarchical context..."
+   }
+   ```
+
+4. **Final Dataset Entry**:
+   ```json
+   {
+     "instruction": "What are the three main types of Patent Assets?",
+     "context": "Patent Assets are a type of Intellectual Property Asset...",
+     "response": "The three main types of Patent Assets are Design Patent Assets, Utility Patent Assets, and Plant Patent Assets.",
+     "metadata": {
+       "source_node": "RCBP9N5ER7Y6inNQdjggrKt",
+       "question_type": "classification"
+     }
+   }
+   ```
+
+This pipeline ensures that the final instruction dataset:
+- Maintains data integrity
+- Preserves contextual relationships
+- Generates high-quality instruction-response pairs
+- Includes comprehensive metadata for tracking and analysis
 
 ## Setup
 
