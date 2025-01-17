@@ -7,13 +7,9 @@ from datetime import datetime
 from agents import (
     questioner_agent_invoke,
     question_checker_agent_invoke,
-    maker_agent,
-    formatter_agent,
-    checker_agent,
-    cleaner_agent,
-    make_instruction_agent,
     create_dataset_entry
 )
+from error_handler import handle_error
 from create_dataset_from_node import (
     get_node_context,
     chunk_text_with_overlap,
@@ -84,8 +80,11 @@ def parse_args():
     return parser.parse_args()
 
 def main():
-    args = parse_args()
-    create_dataset(args.kb_path, args.output, args.limit)
+    try:
+        args = parse_args()
+        create_dataset(args.kb_path, args.output, args.limit)
+    except Exception as e:
+        handle_error(e, context="create_dataset main")
 
 if __name__ == "__main__":
     main()
