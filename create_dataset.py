@@ -89,10 +89,37 @@ def create_dataset(kb_path: str, output: str, limit: Optional[str] = None) -> No
             # Split context into chunks
             chunks = chunk_text_with_overlap(context)
             for i, chunk in enumerate(chunks):
+                # Log chunk
+                chunk_entry = {
+                    'node_key': node_key,
+                    'chunk_index': i,
+                    'chunk_text': chunk
+                }
+                with open(creator.chunks_file, 'a', encoding='utf-8') as f:
+                    f.write(json.dumps(chunk_entry) + '\n')
+                    f.flush()
+                
                 # Create dataset entries
                 questions = questioner_agent_invoke(chunk)
                 if not questions:
                     continue
+                
+                # Parse questions JSON
+                questions_list = json.loads(questions)
+                if questions_list:
+                    # Log raw questions
+                    with open(creator.questions_file, 'a', encoding='utf-8') as f:
+                        for q in questions_list:
+                            question_info = {
+                                'node_key': node_key,
+                                'chunk_index': i,
+                                'chunk_text': chunk,
+                                'question': q,
+                                'status': 'raw',
+                                'timestamp': datetime.now().isoformat()
+                            }
+                            f.write(json.dumps(question_info) + '\n')
+                            f.flush()
                     
                 filtered_questions = question_checker_agent_invoke(questions)
                 if not filtered_questions:
@@ -103,8 +130,13 @@ def create_dataset(kb_path: str, output: str, limit: Optional[str] = None) -> No
                     try:
                         entry = create_dataset_entry(question, chunk, node_key)
                         if entry:
+                            # Write to both dataset.jsonl and creator's dataset file
                             with open(output, 'a', encoding='utf-8') as f:
                                 f.write(json.dumps(entry) + '\n')
+                                f.flush()
+                            with open(creator.dataset_file, 'a', encoding='utf-8') as f:
+                                f.write(json.dumps(entry) + '\n')
+                                f.flush()
                     except Exception as e:
                         logger.error(f"Error creating dataset entry: {str(e)}")
                         continue
