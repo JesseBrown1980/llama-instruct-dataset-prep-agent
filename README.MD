@@ -2,6 +2,99 @@
 
 An agent-based system for preparing instruction datasets from knowledge bases.
 
+## Philosophy
+
+This project is built on several key principles:
+
+1. **Resilience First**: The system is designed to be resilient against failures at every step. Rather than failing fast, it employs intelligent retry mechanisms with exponential backoff to maximize the chances of successful dataset entry creation.
+
+2. **Quality Over Quantity**: Each dataset entry goes through multiple validation stages:
+   - Question validation before instruction creation
+   - Response quality checking
+   - Format validation at multiple stages
+   - Final comprehensive validation of the complete entry
+
+3. **Contextual Awareness**: The system maintains context from parent and child nodes when processing knowledge base entries, ensuring that generated questions and responses have sufficient context to be meaningful.
+
+4. **Traceability**: Every step of the process is logged and tracked:
+   - Unique IDs for each entry
+   - Detailed logging of attempts and retries
+   - Metadata preservation throughout the pipeline
+   - Complete audit trail in log files
+
+## System Flow
+
+The dataset preparation follows a carefully orchestrated flow:
+
+### 1. Knowledge Base Traversal
+```
+Root Node
+├── Get main context
+├── Collect parent context
+└── Collect child context
+```
+
+### 2. Context Processing
+```
+Combined Context
+├── Check length (>2000 words?)
+│   ├── Yes -> Split into chunks with overlap
+│   └── No  -> Process as single chunk
+└── Log to chunks.jsonl
+```
+
+### 3. Dataset Entry Creation
+Each chunk goes through a multi-stage pipeline:
+
+```
+Question Generation
+└── Instruction Creation
+    └── Response Generation
+        └── Quality Check
+            └── Final Formatting
+```
+
+Each stage employs retry-until-success with exponential backoff:
+- Initial retry delay: 1 second
+- Exponential increase up to 15 seconds
+- Maximum total retry time: 60 seconds per stage
+
+### 4. Validation Layers
+
+```
+Entry Validation
+├── Content Validation
+│   ├── Minimum length checks
+│   ├── Format validation
+│   └── Content quality checks
+├── Structure Validation
+│   ├── Required fields
+│   ├── JSON structure
+│   └── Nested object checks
+└── Metadata Validation
+    ├── Entry ID
+    ├── Node references
+    └── Timestamps
+```
+
+### 5. File Management
+
+The system maintains several key files:
+- `chunks.jsonl`: Raw context chunks
+- `questions.jsonl`: Generated questions
+- `dataset.jsonl`: Final dataset entries
+- `nodetraversal.jsonl`: Processing metadata
+- `token_cost.json`: API usage tracking
+
+## Error Handling Philosophy
+
+The system follows a "never give up" approach to error handling:
+1. Every operation that could fail is wrapped in retry logic
+2. Retries use exponential backoff to avoid overwhelming the system
+3. Each retry attempt is logged for debugging
+4. Only after exhausting all retries (60 second timeout) will an operation fail
+5. Failures are logged with detailed context for post-mortem analysis
+
 ## Setup
 
 1. Clone the repository:
@@ -86,6 +179,16 @@ python create_dataset.py --kb-path knowledge_base.json --output dataset.json --l
 Arguments:
 - `--kb-path`: Path to knowledge base JSON
 - `--output`: Path to save dataset
+- `--limit`: Number of nodes to process or 'all' for entire knowledge base
+
+4. Create Dataset from Specific Node:
+```bash
+python create_dataset_from_node.py full-kb.json dataset.jsonl RCBP9N5ER7Y6inNQdjggrKt --limit all
+```
+Arguments:
+- First argument: Path to knowledge base JSON file
+- Second argument: Path to output dataset file
+- Third argument: Node ID to start traversal from
 - `--limit`: Number of nodes to process or 'all' for entire knowledge base
 
 The dataset creation process:
