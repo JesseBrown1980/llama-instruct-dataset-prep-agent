@@ -121,25 +121,17 @@ def create_dataset(kb_path: str, output: str, limit: Optional[str] = None) -> No
                             f.write(json.dumps(question_info) + '\n')
                             f.flush()
                     
-                filtered_questions = question_checker_agent_invoke(questions)
-                if not filtered_questions:
-                    continue
-                
-                # Create dataset entries for each question
-                for question in json.loads(filtered_questions):
-                    try:
-                        entry = create_dataset_entry(question, chunk, node_key)
-                        if entry:
-                            # Write to both dataset.jsonl and creator's dataset file
-                            with open(output, 'a', encoding='utf-8') as f:
-                                f.write(json.dumps(entry) + '\n')
-                                f.flush()
-                            with open(creator.dataset_file, 'a', encoding='utf-8') as f:
-                                f.write(json.dumps(entry) + '\n')
-                                f.flush()
-                    except Exception as e:
-                        logger.error(f"Error creating dataset entry: {str(e)}")
-                        continue
+                    # Process questions directly
+                    for question in questions_list:
+                        try:
+                            entry = create_dataset_entry(question, chunk, node_key)
+                            if entry:
+                                with open(creator.dataset_file, 'a', encoding='utf-8') as f:
+                                    f.write(entry + '\n')
+                                    f.flush()
+                        except Exception as e:
+                            logger.error(f"Error creating dataset entry: {str(e)}")
+                            continue
             
             # Mark node as processed
             creator.mark_node_processed(node_key)
