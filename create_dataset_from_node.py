@@ -122,11 +122,13 @@ class DatasetCreator:
         self.dataset_file = os.path.join(self.data_dir, 'dataset.jsonl')
         self.metadata_file = os.path.join(self.data_dir, 'nodetraversal.jsonl')
         
-        # Clear files
-        open(self.chunks_file, 'w').close()
-        open(self.questions_file, 'w').close()
-        open(self.dataset_file, 'w').close()
-        open(self.metadata_file, 'w').close()
+        # Create files only if they don't exist
+        for file_path in [self.chunks_file, self.questions_file, self.dataset_file, self.metadata_file]:
+            if not os.path.exists(file_path):
+                open(file_path, 'w').close()
+                logger.info(f"Created new file: {os.path.basename(file_path)}")
+            else:
+                logger.info(f"Using existing file: {os.path.basename(file_path)}")
 
     def is_node_processed(self, node_key: str) -> bool:
         """Check if a node has already been processed by looking in nodetraversal.jsonl"""
@@ -174,32 +176,29 @@ def create_dataset_from_node(kb_path: str, output: str, start_node_id: str, limi
         return
     
     # Initialize tracking sets
-    processed_nodes = set()  # All processed nodes
-    nodes_to_process = []   # Queue of nodes to process
+    processed_nodes = set()  # All processed nodes can be retrieved from the nodetraversal.jsonl file
+    nodes_to_process = []    # Queue of nodes to process
     
     # Get all nodes
     nodes = kb['nodes']
     total_nodes = len(nodes)
     logger.info(f"Found {total_nodes} total nodes in knowledge base")
     
-    # If processing all nodes, add them all to the queue in order
-    if limit is None:
-        # Start with the specified node
-        if start_node_id not in nodes:
-            logger.error(f"Start node {start_node_id} not found in knowledge base")
-            return
-        nodes_to_process.append(start_node_id)
+    # Find the start node and add all subsequent nodes to the queue
+    if start_node_id not in nodes:
+        logger.error(f"Start node {start_node_id} not found in knowledge base")
+        return
         
-        # Add all other nodes
-        for node_id in nodes:
-            if node_id != start_node_id:
-                nodes_to_process.append(node_id)
-    else:
-        # Just add the start node for limited processing
-        if start_node_id not in nodes:
-            logger.error(f"Start node {start_node_id} not found in knowledge base")
-            return
-        nodes_to_process.append(start_node_id)
+    # Convert nodes dictionary keys to a list to maintain order
+    node_keys = list(nodes.keys())
+    # Find the index of the start node
+    start_idx = node_keys.index(start_node_id)
+    # Add all nodes that appear after the start node
+    nodes_to_process = node_keys[start_idx:]
+    
+    if limit is not None and limit != 'all':
+        # If there's a numeric limit, only keep that many nodes
+        nodes_to_process = nodes_to_process[:int(limit)]
     
     creator = DatasetCreator(output)
     nodes_processed = 0
