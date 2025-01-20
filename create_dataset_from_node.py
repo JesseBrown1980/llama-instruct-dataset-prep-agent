@@ -196,10 +196,14 @@ def create_dataset_from_node(kb_path: str, output: str, start_node_id: str, limi
     # Add all nodes that appear after the start node
     nodes_to_process = node_keys[start_idx:]
     
+    # Calculate total nodes to process
+    total_to_process = len(nodes_to_process)
     if limit is not None and limit != 'all':
         # If there's a numeric limit, only keep that many nodes
         nodes_to_process = nodes_to_process[:int(limit)]
+        total_to_process = len(nodes_to_process)
     
+    logger.info(f"Starting from node at index {start_idx + 1}, processing {total_to_process} nodes")
     creator = DatasetCreator(output)
     nodes_processed = 0
     
@@ -229,7 +233,7 @@ def create_dataset_from_node(kb_path: str, output: str, start_node_id: str, limi
                 continue
                 
             # Process the node
-            logger.info(f"Processing node {nodes_processed + 1}/{total_nodes if limit is None else limit}: {current_id}")
+            logger.info(f"Processing node {nodes_processed + 1}/{total_to_process}: {current_id} (KB index: {start_idx + nodes_processed + 1})")
             
             # Generate and process chunks
             chunks = chunk_text_with_overlap(context) if len(context.split()) > 2000 else [context]
