@@ -452,7 +452,7 @@ def maker_agent(question: str, context: str, max_retries: int = 3) -> str:
     for attempt in range(max_retries):
         try:
             prompt = f"""Generate a clear, accurate response to this instruction using ONLY the provided context.
-Be direct and comprehensive.
+Be direct, explanative and comprehensive.
 
 Context: {context}
 Instruction: {question}
@@ -495,7 +495,7 @@ Return ONLY the JSON object."""
 
         # Check response and track token usage
         result = ollama_invoke(prompt, model="llama3:8b", temperature=0.1,
-                           format_spec="json", agent_name="response_checker")
+                           format_spec="text", agent_name="response_checker")
         
         return result
     except Exception as e:
@@ -616,7 +616,7 @@ def create_dataset_entry(question: str, context: str, node_key: str = None) -> s
         )
         
         # Clean instruction text
-        instruction = clean_llm_text(instruction)
+        # instruction = clean_llm_text(instruction)
         logger.info(f"[{entry_id}] Generated instruction: {instruction}")
             
         # 2. Generate response with retries
@@ -629,7 +629,7 @@ def create_dataset_entry(question: str, context: str, node_key: str = None) -> s
         )
         
         # Clean response text
-        response = clean_llm_text(response)
+        # response = clean_llm_text(response)
         logger.info(f"[{entry_id}] Generated response: {response}")
         
         # 3. Create draft JSON with proper escaping
