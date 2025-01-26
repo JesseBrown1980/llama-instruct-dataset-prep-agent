@@ -204,8 +204,8 @@ def handle_error(error: Exception, context: str = "") -> None:
             f.flush()
             
         # Wait 10 minutes
-        logger.info(f"Waiting 10 minutes before resuming from node {current_node}")
-        time.sleep(600)  # 10 minutes in seconds
+        logger.info(f"Waiting 2 minutes before resuming from node {current_node}")
+        time.sleep(120)  # 10 minutes in seconds
         
         # Restart the process
         logger.info(f"Restarting process from node {current_node}")
